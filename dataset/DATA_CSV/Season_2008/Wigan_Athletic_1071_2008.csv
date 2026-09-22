@@ -1,0 +1,36 @@
+position,foot,status,joinedOn,name,height,id,nationality,marketValue,signedFrom,age,dateOfBirth,currentClub
+Goalkeeper,right,,"Oct 27, 2006",Chris Kirkland,"1,98m",3219,['England'],€5.50m,: Ablöse €3.73m,28,"May 2, 1981",Retired
+Goalkeeper,right,,"Jul 1, 2008",Richard Kingson,"1,83m",7125,"['Ghana', 'Türkiye']",€500k,: Ablöse free transfer,31,"Jun 13, 1978",Retired
+Goalkeeper,right,,"Feb 1, 2007",Carlo Nash,"1,97m",3804,['England'],€300k,: Ablöse €450k,35,"Sep 13, 1973",Retired
+Goalkeeper,right,,"Jul 1, 2005",Mike Pollitt,"1,93m",32217,['England'],€300k,Rotherham United,37,"Feb 29, 1972",Retired
+Centre-Back,right,,"Jul 1, 2007",Titus Bramble,"1,92m",3130,"['England', 'Montserrat']",€3.70m,Newcastle United,27,"Jul 31, 1981",Retired
+Left-Back,left,,"Oct 21, 2014",Maynor Figueroa,"1,82m",62240,['Honduras'],€3.70m,: Ablöse free transfer,26,"May 2, 1983",Retired
+Left-Back,left,,"Jan 1, 2008",Erik Edman,"1,79m",4394,['Sweden'],€1.80m,Stade Rennais FC,30,"Nov 11, 1978",Retired
+Right-Back,right,,"Jan 18, 2008",Antonio Valencia,"1,80m",33544,['Ecuador'],€11.00m,: Ablöse €2.00m,23,"Aug 4, 1985",Retired
+Right-Back,right,,"Jul 1, 2007",Mario Melchiot,"1,87m",3158,"['Netherlands', 'Suriname']",€3.60m,Stade Rennais FC,32,"Nov 4, 1976",Retired
+Right-Back,right,,"Aug 1, 2006",Emmerson Boyce,"1,80m",19641,"['Barbados', 'England']",€2.80m,: Ablöse €1.50m,29,"Sep 24, 1979",Retired
+Right-Back,right,,"Jul 1, 2005",Ryan Taylor,"1,79m",33785,['England'],€2.00m,: Ablöse €100k,24,"Aug 19, 1984",Without Club
+Defensive Midfield,right,,"Jan 1, 2008",Wilson Palacios,"1,81m",58361,['Honduras'],€13.50m,CD Olimpia,24,"Jul 29, 1984",Retired
+Defensive Midfield,,,"Jan 31, 2013",Paul Scharner,,2953,['Austria'],€4.50m,: Ablöse €100k,29,"Mar 11, 1980",Retired
+Defensive Midfield,right,,"Jul 29, 2008",Lee Cattermole,"1,78m",37363,['England'],€3.70m,Middlesbrough FC,21,"Mar 21, 1988",Retired
+Defensive Midfield,right,,"Mar 1, 2009",Won-hee Cho,"1,77m",35185,"['Korea, South']",€1.50m,Suwon Samsung Bluewings,26,"Apr 17, 1983",Retired
+Defensive Midfield,both,,"Jul 1, 2006",Tomasz Cywka,"1,80m",38558,['Poland'],€200k,Gwarek Zabrze,21,"Jun 27, 1988",Retired
+Defensive Midfield,,,,Joe Holt,"1,78m",61700,['England'],,,19,"Feb 1, 1990",Flint Mountain
+Central Midfield,right,,"Jan 26, 2009",Ben Watson,"1,78m",14081,['England'],€2.20m,: Ablöse €2.10m,23,"Jul 9, 1985",Retired
+Central Midfield,,,"Jul 1, 2007",Michael Brown,,13509,['England'],€2.20m,Fulham FC,32,"Jan 25, 1977",Retired
+Central Midfield,right,,"Jul 1, 2007",Lewis Montrose,"1,83m",57493,"['England', 'Barbados']",€100k,Wigan Athletic U18,20,"Nov 17, 1988",Retired
+Central Midfield,right,,,Jon Routledge,"1,81m",98063,['England'],,,19,"Nov 23, 1989",Without Club
+Left Midfield,left,,"Aug 31, 2006",Kevin Kilbane,"1,83m",4135,"['Ireland', 'England']",€3.00m,: Ablöse €2.50m,32,"Feb 1, 1977",Retired
+Left Midfield,left,,"Aug 1, 2007",Rachid Bouaouzan,"1,70m",21567,"['Morocco', 'Netherlands']",€850k,: Ablöse €450k,25,"Feb 20, 1984",Retired
+Attacking Midfield,left,,"Jul 10, 2007",Jason Koumas,"1,77m",3661,"['Wales', 'Cyprus']",€3.00m,West Bromwich Albion,29,"Sep 25, 1979",Retired
+Attacking Midfield,left,,"Jul 16, 2008",Olivier Kapo,"1,84m",5438,"['France', ""Cote d'Ivoire""]",€2.90m,: Ablöse €4.40m,28,"Sep 27, 1980",Retired
+Attacking Midfield,right,,"Jul 1, 2007",Antoine Sibierski,"1,87m",5489,"['France', 'Poland']",€800k,Newcastle United,34,"Aug 5, 1974",Retired
+Left Winger,right,,"Jul 1, 2008",Daniël de Ridder,"1,80m",15894,"['Netherlands', 'Israel']",€1.80m,: Ablöse free transfer,25,"Mar 6, 1984",Retired
+Right Winger,left,heart problems - Return unknown,"Feb 2, 2009",Charles N'Zogbia,"1,71m",22165,"['France', 'DR Congo']",€5.50m,Newcastle United,23,"May 28, 1986",Retired
+Right Winger,right,,"Jul 1, 2006",Tomasz Kupisz,"1,80m",45185,['Poland'],€100k,MKS Piaseczno,19,"Jan 2, 1990",Hutnik Warszawa
+Right Winger,right,"Muscle injury - Return expected on Nov 24, 2024","Jul 1, 2023",Callum McManaman,"1,74m",61711,"['England', 'Ireland']",,Without Club,18,"Apr 25, 1991",Wigan Athletic
+Centre-Forward,both,,"Jul 1, 2008",Amr Zaki,"1,86m",38178,['Egypt'],€6.50m,Zamalek SC,26,"Apr 1, 1983",Retired
+Centre-Forward,right,,"Jul 9, 2006",Emile Heskey,"1,88m",3142,"['England', 'Antigua and Barbuda']",€5.50m,: Ablöse €7.50m,31,"Jan 11, 1978",Retired
+Centre-Forward,right,,"Jan 26, 2009",Hugo Rodallega,"1,81m",37934,['Colombia'],€4.50m,Club Necaxa,23,"Jul 25, 1985",Independiente Santa Fe
+Centre-Forward,both,,"Jan 1, 2009",Mido,"1,88m",4329,['Egypt'],€4.20m,Middlesbrough FC,26,"Feb 23, 1983",Retired
+Centre-Forward,both,,"Jul 1, 2005",Henri Camara,"1,78m",3900,"['Senegal', 'France']",€2.00m,Wolverhampton Wanderers,32,"May 10, 1977",Retired
