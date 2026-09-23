@@ -144,17 +144,17 @@ print(f"RMSE: {away_rmse:.3f}")
 
 joblib.dump(
     home_model,
-    "home_goals_model_v3.pkl"
+    "models/home_goals_model_v3.pkl"
 )
 
 joblib.dump(
     away_model,
-    "away_goals_model_v3.pkl"
+    "models/away_goals_model_v3.pkl"
 )
 
 joblib.dump(
     feature_columns,
-    "model_features_v3.pkl"
+    "models/model_features_v3.pkl"
 )
 
 print("\nV3 models saved.")
