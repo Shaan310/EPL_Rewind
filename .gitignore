@@ -12,3 +12,6 @@ dist/
 
 model_backup/
 train_model_v3_compact.py
+.env
+.env.local
+.env.*.local
