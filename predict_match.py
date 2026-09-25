@@ -2,7 +2,6 @@ import pandas as pd
 import joblib
 
 team_features = pd.read_csv("data/team_season_features.csv")
-
 home_model = joblib.load("models/home_goals_model_v3.pkl")
 away_model = joblib.load("models/away_goals_model_v3.pkl")
 feature_columns = joblib.load("models/model_features_v3.pkl")
