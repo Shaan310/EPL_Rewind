@@ -56,6 +56,19 @@ function App() {
   const [awayTeam, setAwayTeam] = useState("")
   const [awaySeason, setAwaySeason] = useState("")
 
+  const resetMatch = () => {
+    setHomeTeam("")
+    setHomeSeason("")
+    setAwayTeam("")
+    setAwaySeason("")
+    setHomePlayers([])
+    setAwayPlayers([])
+    setHomeXI([])
+    setAwayXI([])
+    setMatchResult(null)
+    setScreen("setup")
+  }
+
   useEffect(() => {
     fetch("/data/team_season_features.csv")
       .then((response) => response.text())
@@ -518,7 +531,7 @@ function App() {
           <div className="mt-10 flex justify-center">
 
             <button
-              onClick={() => setScreen("setup")}
+              onClick={resetMatch}
               className="rounded-xl bg-[#00ff87] px-10 py-4 text-sm font-black uppercase tracking-widest text-[#061426] transition hover:scale-105"
             >
               Play Again
