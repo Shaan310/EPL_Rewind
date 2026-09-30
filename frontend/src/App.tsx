@@ -223,9 +223,9 @@ function App() {
 
   if (screen === "preview") {
     return (
-      <main className="min-h-screen bg-[#061426] text-white">
+      <main className="min-h-screen bg-[#38003C] text-white">
 
-        <nav className="flex h-20 items-center justify-between border-b border-white/10 px-8 lg:px-14">
+        <nav className="flex h-20 items-center justify-between border-b border-white/10 bg-[#38003C] px-8 lg:px-14">
 
           <button
             onClick={() => setScreen("lineup")}
@@ -235,10 +235,10 @@ function App() {
           </button>
 
           <div className="text-xl font-black tracking-tight">
-            EPL <span className="text-[#00ff87]">REWIND</span>
+            EPL <span className="text-[#38BDF8]">REWIND</span>
           </div>
 
-          <div className="text-xs font-bold uppercase tracking-widest text-white/30">
+          <div className="text-xs font-bold uppercase tracking-widest text-white/60">
             Match Preview
           </div>
 
@@ -248,12 +248,12 @@ function App() {
 
           <div className="text-center">
 
-            <p className="text-xs font-bold uppercase tracking-[0.3em] text-[#00ff87]">
+            <p className="text-xs font-bold uppercase tracking-[0.3em] text-[#38BDF8]">
               Match Preview
             </p>
 
             <h1 className="mt-4 text-5xl font-black">
-              READY TO <span className="text-[#00ff87]">REWIND?</span>
+              READY TO <span className="text-[#38BDF8]">REWIND?</span>
             </h1>
 
           </div>
@@ -269,7 +269,7 @@ function App() {
                 {homeSeason}
               </p>
 
-              <p className="mt-6 text-xs font-bold uppercase tracking-widest text-white/30">
+              <p className="mt-6 text-xs font-bold uppercase tracking-widest text-white/60">
                 {homeXI.length} Players Selected
               </p>
             </div>
@@ -287,7 +287,7 @@ function App() {
                 {awaySeason}
               </p>
 
-              <p className="mt-6 text-xs font-bold uppercase tracking-widest text-white/30">
+              <p className="mt-6 text-xs font-bold uppercase tracking-widest text-white/60">
                 {awayXI.length} Players Selected
               </p>
             </div>
@@ -327,9 +327,9 @@ function App() {
                   console.error("Simulation failed:", error)
                 }
               }}
-              className="rounded-xl bg-[#00ff87] px-12 py-4 text-sm font-black uppercase tracking-widest text-[#061426] transition hover:scale-105"
+              className="rounded-xl bg-[#38BDF8] px-12 py-4 text-sm font-black uppercase tracking-widest text-white/80 transition hover:scale-105"
             >
-              Simulate Match
+              SIMULATE MATCH
             </button>
 
           </div>
@@ -343,7 +343,7 @@ function App() {
 
   if (screen === "result") {
     return (
-      <main className="min-h-screen bg-[#061426] text-white">
+      <main className="min-h-screen bg-[#38003C] text-white">
 
         <nav className="flex h-20 items-center justify-between border-b border-white/10 px-8 lg:px-14">
 
@@ -355,10 +355,10 @@ function App() {
           </button>
 
           <div className="text-xl font-black tracking-tight">
-            EPL <span className="text-[#00ff87]">REWIND</span>
+            EPL <span className="text-[#38BDF8]">REWIND</span>
           </div>
 
-          <div className="text-xs font-bold uppercase tracking-widest text-white/30">
+          <div className="text-xs font-bold uppercase tracking-widest text-white/60">
             Full Time
           </div>
 
@@ -368,7 +368,7 @@ function App() {
 
           <div className="text-center">
 
-            <p className="text-xs font-bold uppercase tracking-[0.3em] text-[#00ff87]">
+            <p className="text-xs font-bold uppercase tracking-[0.3em] text-[#38BDF8]">
               Full Time
             </p>
 
@@ -514,9 +514,9 @@ function App() {
 
             </div>
 
-            <div className="rounded-2xl border border-[#00ff87]/20 bg-[#0a1b31] p-7">
+            <div className="rounded-2xl border border-[#38BDF8]/20 bg-[#0a1b31] p-7">
 
-              <p className="text-xs font-black uppercase tracking-[0.2em] text-[#00ff87]">
+              <p className="text-xs font-black uppercase tracking-[0.2em] text-[#38BDF8]">
                 Man of the Match
               </p>
 
@@ -532,7 +532,7 @@ function App() {
 
             <button
               onClick={resetMatch}
-              className="rounded-xl bg-[#00ff87] px-10 py-4 text-sm font-black uppercase tracking-widest text-[#061426] transition hover:scale-105"
+              className="rounded-xl bg-[#38BDF8] px-10 py-4 text-sm font-black uppercase tracking-widest text-[#38003C] transition hover:scale-105"
             >
               Play Again
             </button>
@@ -547,7 +547,7 @@ function App() {
 
   if (screen === "lineup") {
     return (
-      <main className="min-h-screen bg-[#061426] text-white">
+      <main className="min-h-screen bg-[#38003C] text-white">
 
         <nav className="flex h-20 items-center justify-between border-b border-white/10 px-8 lg:px-14">
 
@@ -555,8 +555,14 @@ function App() {
             onClick={() => setScreen("setup")}
             className="flex items-center gap-3"
           >
-            <div className="flex h-10 w-10 items-center justify-center rounded-lg bg-[#00ff87] font-black text-[#061426]">
-              ER
+            <div className="flex h-10 w-10 items-center justify-center rounded-lg bg-[#38BDF8] font-black text-[#38003C]">
+              <svg 
+                className="h-5 w-5 fill-current" 
+                viewBox="0 0 24 24" 
+                xmlns="http://www.w3.org/2000/svg"
+              >
+                <path d="M11 19V5l-9 7 9 7zm11 0V5l-9 7 9 7z" />
+              </svg>
             </div>
 
             <span className="text-xl font-black tracking-tight">
@@ -574,16 +580,16 @@ function App() {
 
           <div className="mb-12">
             <div className="mb-4 flex items-center gap-3">
-              <div className="h-px w-10 bg-[#00ff87]" />
+              <div className="h-px w-10 bg-[#38BDF8]" />
 
-              <span className="text-xs font-bold uppercase tracking-[0.3em] text-[#00ff87]">
+              <span className="text-xs font-bold uppercase tracking-[0.3em] text-[#38BDF8]">
                 Match Setup
               </span>
             </div>
 
             <h1 className="text-5xl font-black tracking-[-0.04em]">
               BUILD YOUR
-              <span className="text-[#00ff87]"> XI.</span>
+              <span className="text-[#38BDF8]"> XI.</span>
             </h1>
 
             <p className="mt-4 text-white/45">
@@ -595,7 +601,7 @@ function App() {
 
             <div className="rounded-3xl border border-white/10 bg-[#0a1b31] p-7">
 
-              <p className="text-xs font-bold uppercase tracking-[0.25em] text-[#00ff87]">
+              <p className="text-xs font-bold uppercase tracking-[0.25em] text-[#38BDF8]">
                 Home
               </p>
 
@@ -608,7 +614,7 @@ function App() {
               </p>
 
               <div className="mt-8">
-                <p className="mb-4 text-xs font-bold uppercase tracking-widest text-white/35">
+                <p className="mb-4 text-xs font-bold uppercase tracking-widest text-white/70">
                   Select Players
                 </p>
 
@@ -681,8 +687,8 @@ function App() {
                                   }}
                                   className={`rounded-xl border p-4 text-left transition ${
                                     selected
-                                      ? "border-[#00ff87] bg-[#00ff87]/10"
-                                      : "border-white/10 bg-[#061426] hover:border-white/30"
+                                      ? "border-[#38BDF8] bg-[#38BDF8]/10"
+                                      : "border-white/10 bg-[#38003C] hover:border-white/30"
                                   }`}
                                 >
 
@@ -710,7 +716,7 @@ function App() {
                     const status = getXIStatus(homeXI)
 
                     return (
-                      <div className="mt-6 rounded-xl border border-white/10 bg-[#061426] p-4">
+                      <div className="mt-6 rounded-xl border border-white/10 bg-[#38003C] p-4">
 
                         <div className="flex items-center justify-between">
 
@@ -721,7 +727,7 @@ function App() {
                           <span
                             className={
                               status.valid
-                                ? "text-sm font-bold text-[#00ff87]"
+                                ? "text-sm font-bold text-[#38BDF8]"
                                 : "text-sm font-bold text-white/40"
                             }
                           >
@@ -732,19 +738,19 @@ function App() {
 
                         <div className="mt-3 grid grid-cols-2 gap-2 text-xs">
 
-                          <span className={status.goalkeepers === 1 ? "text-[#00ff87]" : "text-red-400"}>
+                          <span className={status.goalkeepers === 1 ? "text-[#38BDF8]" : "text-red-400"}>
                             {status.goalkeepers === 1 ? "✓" : "✕"} 1 Goalkeeper
                           </span>
 
-                          <span className={status.defenders >= 3 ? "text-[#00ff87]" : "text-red-400"}>
+                          <span className={status.defenders >= 3 ? "text-[#38BDF8]" : "text-red-400"}>
                             {status.defenders >= 3 ? "✓" : "✕"} 3+ Defenders
                           </span>
 
-                          <span className={status.midfielders >= 2 ? "text-[#00ff87]" : "text-red-400"}>
+                          <span className={status.midfielders >= 2 ? "text-[#38BDF8]" : "text-red-400"}>
                             {status.midfielders >= 2 ? "✓" : "✕"} 2+ Midfielders
                           </span>
 
-                          <span className={status.attackers >= 1 ? "text-[#00ff87]" : "text-red-400"}>
+                          <span className={status.attackers >= 1 ? "text-[#38BDF8]" : "text-red-400"}>
                             {status.attackers >= 1 ? "✓" : "✕"} 1+ Attacker
                           </span>
 
@@ -765,8 +771,8 @@ function App() {
                   <span
                     className={
                       isValidXI(homeXI)
-                        ? "text-sm font-bold text-[#00ff87]"
-                        : "text-sm font-bold text-white/30"
+                        ? "text-sm font-bold text-[#38BDF8]"
+                        : "text-sm font-bold text-white/60"
                     }
                   >
                     {isValidXI(homeXI)
@@ -782,7 +788,7 @@ function App() {
 
             <div className="rounded-3xl border border-white/10 bg-[#0a1b31] p-7">
 
-              <p className="text-xs font-bold uppercase tracking-[0.25em] text-[#00ff87]">
+              <p className="text-xs font-bold uppercase tracking-[0.25em] text-[#38BDF8]">
                 Away
               </p>
 
@@ -868,8 +874,8 @@ function App() {
                                   }}
                                   className={`rounded-xl border p-4 text-left transition ${
                                     selected
-                                      ? "border-[#00ff87] bg-[#00ff87]/10"
-                                      : "border-white/10 bg-[#061426] hover:border-white/30"
+                                      ? "border-[#38BDF8] bg-[#38BDF8]/10"
+                                      : "border-white/10 bg-[#38003C] hover:border-white/30"
                                   }`}
                                 >
 
@@ -897,7 +903,7 @@ function App() {
                     const status = getXIStatus(awayXI)
 
                     return (
-                      <div className="mt-6 rounded-xl border border-white/10 bg-[#061426] p-4">
+                      <div className="mt-6 rounded-xl border border-white/10 bg-[#38003C] p-4">
 
                         <div className="flex items-center justify-between">
 
@@ -908,7 +914,7 @@ function App() {
                           <span
                             className={
                               status.valid
-                                ? "text-sm font-bold text-[#00ff87]"
+                                ? "text-sm font-bold text-[#38BDF8]"
                                 : "text-sm font-bold text-white/40"
                             }
                           >
@@ -919,19 +925,19 @@ function App() {
 
                         <div className="mt-3 grid grid-cols-2 gap-2 text-xs">
 
-                          <span className={status.goalkeepers === 1 ? "text-[#00ff87]" : "text-red-400"}>
+                          <span className={status.goalkeepers === 1 ? "text-[#38BDF8]" : "text-red-400"}>
                             {status.goalkeepers === 1 ? "✓" : "✕"} 1 Goalkeeper
                           </span>
 
-                          <span className={status.defenders >= 3 ? "text-[#00ff87]" : "text-red-400"}>
+                          <span className={status.defenders >= 3 ? "text-[#38BDF8]" : "text-red-400"}>
                             {status.defenders >= 3 ? "✓" : "✕"} 3+ Defenders
                           </span>
 
-                          <span className={status.midfielders >= 2 ? "text-[#00ff87]" : "text-red-400"}>
+                          <span className={status.midfielders >= 2 ? "text-[#38BDF8]" : "text-red-400"}>
                             {status.midfielders >= 2 ? "✓" : "✕"} 2+ Midfielders
                           </span>
 
-                          <span className={status.attackers >= 1 ? "text-[#00ff87]" : "text-red-400"}>
+                          <span className={status.attackers >= 1 ? "text-[#38BDF8]" : "text-red-400"}>
                             {status.attackers >= 1 ? "✓" : "✕"} 1+ Attacker
                           </span>
 
@@ -963,8 +969,8 @@ function App() {
                     <span
                       className={
                         isValidXI(awayXI)
-                          ? "text-sm font-bold text-[#00ff87]"
-                          : "text-sm font-bold text-white/30"
+                          ? "text-sm font-bold text-[#38BDF8]"
+                          : "text-sm font-bold text-white/60"
                       }
                     >
                       {isValidXI(awayXI)
@@ -977,10 +983,10 @@ function App() {
                 </div>  
                   
                 <div className="mt-5 text-right text-sm font-bold">
-                  <span className="text-[#00ff87]">
+                  <span className="text-[#38BDF8]">
                     {awayXI.length}
                   </span>
-                  <span className="text-white/30">
+                  <span className="text-white/60">
                     {" "} / 11 selected
                   </span>
                 </div>
@@ -1009,11 +1015,11 @@ function App() {
               className={`rounded-xl px-10 py-4 text-sm font-black uppercase tracking-wider transition ${
                 isValidXI(homeXI) &&
                 isValidXI(awayXI)
-                  ? "bg-[#00ff87] text-[#061426] hover:scale-105"
-                  : "cursor-not-allowed bg-white/10 text-white/30"
+                  ? "bg-[#38BDF8] text-white/80 hover:scale-105"
+                  : "cursor-not-allowed bg-white/10 text-white/60"
               }`}
             >
-              Continue
+              CONTINUE
             </button>
 
           </div>
@@ -1026,7 +1032,7 @@ function App() {
 
   if (screen === "setup") {
     return (
-      <main className="min-h-screen bg-[#061426] text-white">
+      <main className="min-h-screen bg-[#38003C] text-white">
 
         {/* Navigation */}
         <nav className="flex h-20 items-center justify-between border-b border-white/10 px-8 lg:px-14">
@@ -1035,8 +1041,14 @@ function App() {
             onClick={() => setScreen("home")}
             className="flex items-center gap-3"
           >
-            <div className="flex h-10 w-10 items-center justify-center rounded-lg bg-[#00ff87] font-black text-[#061426]">
-              ER
+            <div className="flex h-10 w-10 items-center justify-center rounded-lg bg-[#38BDF8] font-black text-[#38003C]">
+              <svg 
+                className="h-5 w-5 fill-current" 
+                viewBox="0 0 24 24" 
+                xmlns="http://www.w3.org/2000/svg"
+              >
+                <path d="M11 19V5l-9 7 9 7zm11 0V5l-9 7 9 7z" />
+              </svg>
             </div>
 
             <span className="text-xl font-black tracking-tight">
@@ -1087,16 +1099,16 @@ function App() {
               </button>
 
               <div className="mb-4 flex items-center gap-3">
-                <div className="h-px w-10 bg-[#00ff87]" />
+                <div className="h-px w-10 bg-[#38BDF8]" />
 
-                <span className="text-xs font-bold uppercase tracking-[0.3em] text-[#00ff87]">
+                <span className="text-xs font-bold uppercase tracking-[0.3em] text-[#38BDF8]">
                   Match Simulator
                 </span>
               </div>
 
               <h1 className="text-5xl font-black tracking-[-0.04em] sm:text-6xl">
                 CHOOSE YOUR
-                <span className="text-[#00ff87]"> MATCH.</span>
+                <span className="text-[#38BDF8]"> MATCH.</span>
               </h1>
 
               <p className="mt-4 max-w-xl text-white/45">
@@ -1114,7 +1126,7 @@ function App() {
 
                 <div className="mb-8 flex items-center justify-between">
                   <div>
-                    <p className="text-xs font-bold uppercase tracking-[0.25em] text-[#00ff87]">
+                    <p className="text-xs font-bold uppercase tracking-[0.25em] text-[#38BDF8]">
                       Home
                     </p>
 
@@ -1123,13 +1135,13 @@ function App() {
                     </h2>
                   </div>
 
-                  <div className="flex h-12 w-12 items-center justify-center rounded-xl bg-white/[0.05] text-white/30">
+                  <div className="flex h-12 w-12 items-center justify-center rounded-xl bg-white/[0.05] text-white/60">
                     H
                   </div>
                 </div>
 
                 {/* Team */}
-                <label className="mb-2 block text-xs font-bold uppercase tracking-widest text-white/35">
+                <label className="mb-2 block text-xs font-bold uppercase tracking-widest text-white/70">
                   Team
                 </label>
 
@@ -1141,10 +1153,10 @@ function App() {
                       setHomeTeam(e.target.value)
                       setHomeSeason("")
                     }}
-                    className="w-full appearance-none rounded-xl border border-white/10 bg-[#061426] px-5 py-4 text-white outline-none transition focus:border-[#00ff87]/50"
+                    className="w-full appearance-none rounded-xl border border-[#38BDF8]/40 bg-grey text-[#7DD3FC] px-5 py-4 text-[#7DD3FC] outline-none transition focus:border-[#38BDF8]"
                   >
                     <option value="" disabled>
-                      Select home team
+                      SELECT HOME TEAM
                     </option>
 
                     {teams.map((team) => (
@@ -1156,13 +1168,13 @@ function App() {
 
                   <ChevronDown
                     size={18}
-                    className="pointer-events-none absolute right-5 top-1/2 -translate-y-1/2 text-white/30"
+                    className="pointer-events-none absolute right-5 top-1/2 -translate-y-1/2 text-white/60"
                   />
 
                 </div>
 
                 {/* Season */}
-                <label className="mb-2 block text-xs font-bold uppercase tracking-widest text-white/35">
+                <label className="mb-2 block text-xs font-bold uppercase tracking-widest text-white/70">
                   Season
                 </label>
 
@@ -1171,10 +1183,10 @@ function App() {
                     value={homeSeason}
                     onChange={(e) => setHomeSeason(e.target.value)}
                     disabled={!homeTeam}
-                    className="w-full appearance-none rounded-xl border border-white/10 bg-[#061426] px-5 py-4 text-white outline-none transition focus:border-[#00ff87]/50 disabled:cursor-not-allowed disabled:opacity-40"
+                    className="w-full appearance-none rounded-xl border border-white/10 bg-grey text-[#7DD3FC] px-5 py-4 text-[#7DD3FC] outline-none transition focus:border-[#38BDF8]/50 disabled:cursor-not-allowed disabled:opacity-40"
                   >
                     <option value="" disabled>
-                      Select season
+                      SELECT SEASON
                     </option>
 
                     {(teamSeasons[homeTeam] || []).map((season) => (
@@ -1186,7 +1198,7 @@ function App() {
 
                   <ChevronDown
                     size={18}
-                    className="pointer-events-none absolute right-5 top-1/2 -translate-y-1/2 text-white/30"
+                    className="pointer-events-none absolute right-5 top-1/2 -translate-y-1/2 text-white/60"
                   />
 
                 </div>
@@ -1197,7 +1209,7 @@ function App() {
 
                 <div className="mb-8 flex items-center justify-between">
                   <div>
-                    <p className="text-xs font-bold uppercase tracking-[0.25em] text-[#00ff87]">
+                    <p className="text-xs font-bold uppercase tracking-[0.25em] text-[#38BDF8]">
                       Away
                     </p>
 
@@ -1206,13 +1218,13 @@ function App() {
                     </h2>
                   </div>
 
-                  <div className="flex h-12 w-12 items-center justify-center rounded-xl bg-white/[0.05] text-white/30">
+                  <div className="flex h-12 w-12 items-center justify-center rounded-xl bg-white/[0.05] text-white/60">
                     A
                   </div>
                 </div>
 
                 {/* Team */}
-                <label className="mb-2 block text-xs font-bold uppercase tracking-widest text-white/35">
+                <label className="mb-2 block text-xs font-bold uppercase tracking-widest text-white/70">
                   Team
                 </label>
 
@@ -1223,10 +1235,10 @@ function App() {
                       setAwayTeam(e.target.value)
                       setAwaySeason("")
                     }}
-                    className="w-full appearance-none rounded-xl border border-white/10 bg-[#061426] px-5 py-4 text-white outline-none transition focus:border-[#00ff87]/50"
+                    className="w-full appearance-none rounded-xl border border-white/10 bg-grey text-[#7DD3FC] px-5 py-4 text-[#7DD3FC] outline-none transition focus:border-[#38BDF8]/50"
                   >
                     <option value="" disabled>
-                      Select away team
+                      SELECT AWAY TEAM
                     </option>
 
                     {teams.map((team) => (
@@ -1238,12 +1250,12 @@ function App() {
 
                   <ChevronDown
                     size={18}
-                    className="pointer-events-none absolute right-5 top-1/2 -translate-y-1/2 text-white/30"
+                    className="pointer-events-none absolute right-5 top-1/2 -translate-y-1/2 text-white/60"
                   />
 
                 </div>
                 {/* Season */}
-                <label className="mb-2 block text-xs font-bold uppercase tracking-widest text-white/35">
+                <label className="mb-2 block text-xs font-bold uppercase tracking-widest text-white/70">
                   Season
                 </label>
 
@@ -1253,10 +1265,10 @@ function App() {
                     value={awaySeason}
                     onChange={(e) => setAwaySeason(e.target.value)}
                     disabled={!awayTeam}
-                    className="w-full appearance-none rounded-xl border border-white/10 bg-[#061426] px-5 py-4 text-white outline-none transition focus:border-[#00ff87]/50 disabled:cursor-not-allowed disabled:opacity-40"
+                    className="w-full appearance-none rounded-xl border border-white/10 bg-grey text-[#7DD3FC] px-5 py-4 text-[#7DD3FC] outline-none transition focus:border-[#38BDF8]/50 disabled:cursor-not-allowed disabled:opacity-40"
                   >
                     <option value="" disabled>
-                      Select season
+                      SELECT SEASON
                     </option>
 
                     {(teamSeasons[awayTeam] || []).map((season) => (
@@ -1268,7 +1280,7 @@ function App() {
 
                   <ChevronDown
                     size={18}
-                    className="pointer-events-none absolute right-5 top-1/2 -translate-y-1/2 text-white/30"
+                    className="pointer-events-none absolute right-5 top-1/2 -translate-y-1/2 text-white/60"
                   />
 
                 </div>
@@ -1297,7 +1309,7 @@ function App() {
                     setScreen("lineup")
                   }
                 }}
-                className="group flex items-center gap-4 rounded-xl bg-[#00ff87] px-7 py-4 font-black text-[#061426] transition hover:scale-[1.02] hover:bg-[#39ffa8] disabled:cursor-not-allowed disabled:opacity-30 disabled:hover:scale-100"
+                className="group flex items-center gap-4 rounded-xl bg-[#38BDF8] px-7 py-4 font-black text-white/80 transition hover:scale-[1.02] hover:bg-[#38BDF8] disabled:cursor-not-allowed disabled:opacity-30 disabled:hover:scale-100"
               >
 
                 CONTINUE
@@ -1312,7 +1324,7 @@ function App() {
             </div>
 
             {/* Bottom info */}
-            <div className="mt-16 flex gap-8 text-sm text-white/35">
+            <div className="mt-16 flex gap-8 text-sm text-white/70">
 
               <div className="flex items-center gap-2">
                 <History size={17} />
@@ -1335,13 +1347,19 @@ function App() {
   }
 
   return (
-    <main className="min-h-screen overflow-hidden bg-[#061426] text-white">
+    <main className="min-h-screen overflow-hidden bg-[#38003C] text-white">
 
       <nav className="flex h-20 items-center justify-between border-b border-white/10 px-8 lg:px-14">
 
         <div className="flex items-center gap-3">
-          <div className="flex h-10 w-10 items-center justify-center rounded-lg bg-[#00ff87] font-black text-[#061426]">
-            ER
+          <div className="flex h-10 w-10 items-center justify-center rounded-lg bg-[#38BDF8] font-black text-[#38003C]">
+            <svg 
+              className="h-5 w-5 fill-current" 
+              viewBox="0 0 24 24" 
+              xmlns="http://www.w3.org/2000/svg"
+            >
+              <path d="M11 19V5l-9 7 9 7zm11 0V5l-9 7 9 7z" />
+            </svg>
           </div>
 
           <span className="text-xl font-black tracking-tight">
@@ -1349,7 +1367,7 @@ function App() {
           </span>
         </div>
 
-        <div className="hidden items-center gap-8 text-sm font-semibold text-white/60 md:flex">
+        <div className="hidden items-center gap-8 text-sm font-semibold text-white/80 md:flex">
           <span className="text-white">
             MATCH SIMULATOR
           </span>
@@ -1369,24 +1387,31 @@ function App() {
 
       </nav>
 
-      <section className="relative flex min-h-[calc(100vh-80px)] items-center px-8 lg:px-14">
+      <section className="relative flex min-h-[calc(100vh-80px)] items-center overflow-hidden px-8 lg:px-14">
 
-        <div className="pointer-events-none absolute inset-0 overflow-hidden opacity-[0.07]">
-          <div className="absolute left-1/2 top-1/2 h-[700px] w-[700px] -translate-x-1/2 -translate-y-1/2 rounded-full border border-white" />
-          <div className="absolute left-1/2 top-0 h-full w-px bg-white" />
-          <div className="absolute left-0 top-1/2 h-px w-full bg-white" />
-        </div>
+        <video
+          className="absolute inset-0 h-full w-full object-cover"
+          src="/EplVideo.mp4"
+          autoPlay
+          muted
+          loop
+          playsInline
+        />
 
-        <div className="pointer-events-none absolute -right-40 top-20 h-96 w-96 rounded-full bg-[#00ff87]/10 blur-[120px]" />
+<div className="absolute inset-0 bg-[#38003C]/65" />
 
-        <div className="relative mx-auto grid w-full max-w-7xl items-center gap-16 lg:grid-cols-2">
+        
+
+        <div className="pointer-events-none absolute -right-40 top-20 h-96 w-96 rounded-full bg-[#38BDF8]/10 blur-[120px]" />
+
+        <div className="relative z-10 mx-auto grid w-full max-w-7xl items-center gap-16 lg:grid-cols-2">
 
           <div>
 
             <div className="mb-6 flex items-center gap-3">
-              <div className="h-px w-10 bg-[#00ff87]" />
+              <div className="h-px w-10 bg-[#38BDF8]" />
 
-              <span className="text-xs font-bold uppercase tracking-[0.3em] text-[#00ff87]">
+              <span className="text-xs font-bold uppercase tracking-[0.3em] text-[#38BDF8]">
                 Premier League Time Machine
               </span>
             </div>
@@ -1394,7 +1419,7 @@ function App() {
             <h1 className="max-w-3xl text-6xl font-black leading-[0.9] tracking-[-0.05em] sm:text-7xl lg:text-8xl">
               REWRITE
               <br />
-              <span className="text-[#00ff87]">HISTORY.</span>
+              <span className="text-[#38BDF8]">HISTORY.</span>
             </h1>
 
             <p className="mt-8 max-w-xl text-lg leading-8 text-white/55">
@@ -1405,7 +1430,7 @@ function App() {
 
             <button
               onClick={() => setScreen("setup")}
-              className="group mt-10 flex items-center gap-4 rounded-xl bg-[#00ff87] px-7 py-4 font-black text-[#061426] transition hover:scale-[1.02] hover:bg-[#39ffa8]"
+              className="group mt-10 flex items-center gap-4 rounded-xl bg-[#38BDF8] px-7 py-4 font-black text-white/80 transition hover:scale-[1.02] hover:bg-[#38BDF8]"
             >
               START MATCH
 
@@ -1425,106 +1450,6 @@ function App() {
               <div className="flex items-center gap-2">
                 <Trophy size={17} />
                 Custom XI
-              </div>
-
-            </div>
-
-          </div>
-
-          <div className="relative">
-
-            <div className="absolute -inset-5 rounded-3xl bg-[#00ff87]/5 blur-2xl" />
-
-            <div className="relative overflow-hidden rounded-3xl border border-white/10 bg-[#0a1b31]/90 p-6 shadow-2xl backdrop-blur">
-
-              <div className="mb-8 flex items-center justify-between">
-
-                <span className="text-xs font-bold uppercase tracking-[0.25em] text-white/40">
-                  Historical Match
-                </span>
-
-                <span className="rounded-full bg-[#00ff87]/10 px-3 py-1 text-[10px] font-bold uppercase tracking-widest text-[#00ff87]">
-                  Simulation
-                </span>
-
-              </div>
-
-              <div className="grid grid-cols-[1fr_auto_1fr] items-center gap-5">
-
-                <div className="text-center">
-
-                  <div className="mx-auto mb-4 flex h-20 w-20 items-center justify-center rounded-2xl bg-red-600 text-2xl font-black">
-                    M
-                  </div>
-
-                  <h2 className="font-black">
-                    MAN UNITED
-                  </h2>
-
-                  <p className="mt-1 text-xs text-white/40">
-                    2007/08
-                  </p>
-
-                </div>
-
-                <div className="text-center">
-                  <span className="text-xs font-black tracking-widest text-white/30">
-                    VS
-                  </span>
-                </div>
-
-                <div className="text-center">
-
-                  <div className="mx-auto mb-4 flex h-20 w-20 items-center justify-center rounded-2xl bg-blue-600 text-2xl font-black">
-                    C
-                  </div>
-
-                  <h2 className="font-black">
-                    CHELSEA
-                  </h2>
-
-                  <p className="mt-1 text-xs text-white/40">
-                    2007/08
-                  </p>
-
-                </div>
-
-              </div>
-
-              <div className="my-8 h-px bg-white/10" />
-
-              <div className="grid grid-cols-3 gap-3">
-
-                <div className="rounded-xl bg-white/[0.04] p-4 text-center">
-                  <p className="text-[10px] uppercase tracking-widest text-white/30">
-                    xG
-                  </p>
-
-                  <p className="mt-2 text-xl font-black">
-                    2.60
-                  </p>
-                </div>
-
-                <div className="rounded-xl bg-white/[0.04] p-4 text-center">
-                  <p className="text-[10px] uppercase tracking-widest text-white/30">
-                    MODE
-                  </p>
-
-                  <p className="mt-2 text-xl font-black">
-                    HISTORIC
-                  </p>
-                </div>
-
-                <div className="rounded-xl bg-white/[0.04] p-4 text-center">
-                  <p className="text-[10px] uppercase tracking-widest text-white/30">
-                    XI
-                  </p>
-
-                  <p className="mt-2 text-xl font-black">
-                    CUSTOM
-                  </p>
-                </div>
-
               </div>
 
             </div>
