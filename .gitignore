@@ -15,3 +15,4 @@ train_model_v3_compact.py
 .env
 .env.local
 .env.*.local
+frontend/public/EplKickoff.mp4
