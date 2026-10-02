@@ -1059,7 +1059,7 @@ function App() {
             </span>
           </div>
 
-          <div className="rounded-full border border-white/10 px-4 py-2 text-xs font-bold uppercase tracking-widest text-white">
+          <div className="rounded-full border border-white px-4 py-2 text-xs font-bold uppercase tracking-widest text-white">
             Match Setup
           </div>
 
@@ -1292,7 +1292,7 @@ function App() {
                     setScreen("lineup")
                   }
                 }}
-                className="group flex items-center gap-4 rounded-xl bg-[#38BDF8] px-7 py-4 font-black text-white/80 transition hover:scale-[1.02] hover:bg-[#38BDF8] disabled:cursor-not-allowed disabled:opacity-30 disabled:hover:scale-100"
+                className="group flex items-center gap-4 rounded-xl bg-[#38BDF8] px-7 py-4 font-black text-white transition hover:scale-[1.02] hover:bg-[#38BDF8] disabled:cursor-not-allowed disabled:opacity-30 disabled:hover:scale-100"
               >
 
                 CONTINUE

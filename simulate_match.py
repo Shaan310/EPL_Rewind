@@ -36,6 +36,8 @@ def simulate_match(
     home_players = pd.DataFrame(home_xi)
     away_players = pd.DataFrame(away_xi)
 
+    
+
     home_scorers = generate_scorers(
         home_players,
         simulated_home_goals
@@ -44,6 +46,91 @@ def simulate_match(
     away_scorers = generate_scorers(
         away_players,
         simulated_away_goals
+    )
+
+    # -----------------------------
+    # PLAYER MVP SCORING
+    # -----------------------------
+
+    player_scores = {}
+
+    home_player_names = set(home_players["Player"])
+    away_player_names = set(away_players["Player"])
+
+    home_won = simulated_home_goals > simulated_away_goals
+    away_won = simulated_away_goals > simulated_home_goals
+
+    home_clean_sheet = simulated_away_goals == 0
+    away_clean_sheet = simulated_home_goals == 0
+
+    for player in home_players.to_dict("records"):
+        name = player["Player"]
+        position = str(player["Position"]).upper()
+
+        score = 0
+
+        # Win bonus
+        if home_won:
+            score += 5
+
+        # Goal scoring
+        goals = home_scorers.get(name, 0)
+
+        if goals > 0:
+            score += goals * 10
+
+            if "FORWARD" in position or "ATTACK" in position:
+                score += goals * 4
+            elif "MID" in position:
+                score += goals * 5
+            elif "DEF" in position:
+                score += goals * 7
+
+        # Clean sheet
+        if home_clean_sheet:
+            if "GOALKEEPER" in position or "GK" in position:
+                score += 10
+            elif "DEF" in position:
+                score += 5
+
+        player_scores[name] = score
+
+    for player in away_players.to_dict("records"):
+        name = player["Player"]
+        position = str(player["Position"]).upper()
+
+        score = 0
+
+        # Win bonus
+        if away_won:
+            score += 5
+
+        # Goal scoring
+        goals = away_scorers.get(name, 0)
+
+        if goals > 0:
+            score += goals * 10
+
+            if "FORWARD" in position or "ATTACK" in position:
+                score += goals * 4
+            elif "MID" in position:
+                score += goals * 5
+            elif "DEF" in position:
+                score += goals * 7
+
+        # Clean sheet
+        if away_clean_sheet:
+            if "GOALKEEPER" in position or "GK" in position:
+                score += 10
+            elif "DEF" in position:
+                score += 5
+
+        player_scores[name] = score
+
+    # Highest scoring player becomes MVP
+    man_of_match = max(
+        player_scores,
+        key=player_scores.get
     )
 
     home_minutes = sorted(
@@ -60,22 +147,7 @@ def simulate_match(
         )
     )
 
-
-    all_players = home_players.to_dict("records") + away_players.to_dict("records")
-    scorer_names = []
-
-    for player, goals in home_scorers.items():
-        scorer_names.extend([player] * goals)
-
-    for player, goals in away_scorers.items():
-        scorer_names.extend([player] * goals)
-
-    if scorer_names:
-        man_of_match = random.choice(scorer_names)
-    else:
-        man_of_match = random.choice(
-                [player["Player"] for player in all_players]
-            )
+    
 
     return {
         "home_xg": float(home_xg),
@@ -86,7 +158,9 @@ def simulate_match(
         "away_scorers": dict(away_scorers),
         "home_minutes": home_minutes,
         "away_minutes": away_minutes,
-        "man_of_match": man_of_match
+        "man_of_match": man_of_match,
+        "mvp_score": player_scores[man_of_match],
+        "player_scores": player_scores
     }
 
 
