@@ -226,17 +226,15 @@ function App() {
       <main className="relative min-h-screen overflow-hidden bg-[#061426] text-white">
 
         {/* Match Preview Background */}
-        <video
-          className="absolute inset-0 h-full w-full object-cover"
-          src="/EplKickoff.mp4"
-          autoPlay
-          muted
-          loop
-          playsInline
+        <div
+          className="absolute inset-0 bg-cover bg-center bg-no-repeat"
+          style={{ backgroundImage: "url('/EplKickoff.avif')" }}
         />
 
+
+
         {/* Dark overlay */}
-        <div className="absolute inset-0 bg-black/55" />
+        <div className="absolute inset-0 bg-[#141414]/70" />
 
         <div className="relative z-10">
 
@@ -551,7 +549,7 @@ function App() {
 
             <button
               onClick={resetMatch}
-              className="rounded-xl bg-[#38BDF8] px-10 py-4 text-sm font-black uppercase tracking-widest text-[#141414] transition hover:scale-105"
+              className="rounded-xl bg-[#38BDF8] px-10 py-4 text-sm font-black uppercase tracking-widest text-[#FFFFFF] transition hover:scale-105"
             >
               Play Again
             </button>
