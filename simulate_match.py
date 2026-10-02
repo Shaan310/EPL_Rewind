@@ -20,8 +20,18 @@ def simulate_match(
         away_season
     )
 
-    simulated_home_goals = np.random.poisson(home_xg)
-    simulated_away_goals = np.random.poisson(away_xg)
+    if home_xg > away_xg:
+        home_lambda = home_xg * 1.10
+        away_lambda = away_xg * 0.90
+    elif away_xg > home_xg:
+        home_lambda = home_xg * 0.90
+        away_lambda = away_xg * 1.10
+    else:
+        home_lambda = home_xg
+        away_lambda = away_xg
+
+    simulated_home_goals = np.random.poisson(home_lambda)
+    simulated_away_goals = np.random.poisson(away_lambda)
 
     home_players = pd.DataFrame(home_xi)
     away_players = pd.DataFrame(away_xi)
