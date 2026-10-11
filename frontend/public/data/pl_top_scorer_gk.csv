@@ -1,0 +1,501 @@
+Season,Team,starting_gk
+2000/01,Arsenal,David Seaman
+2000/01,Aston Villa,David James
+2000/01,Bradford,Matt Clarke
+2000/01,Charlton,Dean Kiely
+2000/01,Chelsea,Ed de Goey
+2000/01,Coventry,Chris Kirkland
+2000/01,Derby,Mart Poom
+2000/01,Everton,Paul Gerrard
+2000/01,Ipswich,Richard Wright
+2000/01,Leeds,Nigel Martyn
+2000/01,Leicester,Tim Flowers
+2000/01,Liverpool,Sander Westerveld
+2000/01,Man City,Nicky Weaver
+2000/01,Man United,Fabien Barthez
+2000/01,Middlesbrough,Mark Schwarzer
+2000/01,Newcastle,Shay Given
+2000/01,Southampton,Paul Jones
+2000/01,Sunderland,Thomas Sörensen
+2000/01,Tottenham,Neil Sullivan
+2000/01,West Ham,Shaka Hislop
+2001/02,Arsenal,David Seaman
+2001/02,Aston Villa,Peter Schmeichel
+2001/02,Blackburn,Brad Friedel
+2001/02,Bolton,Jussi Jääskeläinen
+2001/02,Charlton,Dean Kiely
+2001/02,Chelsea,Carlo Cudicini
+2001/02,Derby,Andy Oakes
+2001/02,Everton,Steve Simonsen
+2001/02,Fulham,Edwin van der Sar
+2001/02,Ipswich,Matteo Sereni
+2001/02,Leeds,Nigel Martyn
+2001/02,Leicester,Ian Walker
+2001/02,Liverpool,Jerzy Dudek
+2001/02,Man United,Fabien Barthez
+2001/02,Middlesbrough,Mark Schwarzer
+2001/02,Newcastle,Shay Given
+2001/02,Southampton,Paul Jones
+2001/02,Sunderland,Thomas Sörensen
+2001/02,Tottenham,Neil Sullivan
+2001/02,West Ham,David James
+2002/03,Arsenal,David Seaman
+2002/03,Aston Villa,Peter Enckelman
+2002/03,Birmingham,Nico Vaesen
+2002/03,Blackburn,Brad Friedel
+2002/03,Bolton,Jussi Jääskeläinen
+2002/03,Charlton,Dean Kiely
+2002/03,Chelsea,Carlo Cudicini
+2002/03,Everton,Richard Wright
+2002/03,Fulham,Edwin van der Sar
+2002/03,Leeds,Paul Robinson
+2002/03,Liverpool,Jerzy Dudek
+2002/03,Man City,Peter Schmeichel
+2002/03,Man United,Fabien Barthez
+2002/03,Middlesbrough,Mark Schwarzer
+2002/03,Newcastle,Shay Given
+2002/03,Southampton,Paul Jones
+2002/03,Sunderland,Thomas Sörensen
+2002/03,Tottenham,Kasey Keller
+2002/03,West Brom,Russell Hoult
+2002/03,West Ham,David James
+2003/04,Arsenal,Jens Lehmann
+2003/04,Aston Villa,Thomas Sörensen
+2003/04,Birmingham,Maik Taylor
+2003/04,Blackburn,Brad Friedel
+2003/04,Bolton,Jussi Jääskeläinen
+2003/04,Charlton,Dean Kiely
+2003/04,Chelsea,Carlo Cudicini
+2003/04,Everton,Nigel Martyn
+2003/04,Fulham,Edwin van der Sar
+2003/04,Leeds,Paul Robinson
+2003/04,Leicester,Ian Walker
+2003/04,Liverpool,Jerzy Dudek
+2003/04,Man City,David Seaman
+2003/04,Man United,Tim Howard
+2003/04,Middlesbrough,Mark Schwarzer
+2003/04,Newcastle,Shay Given
+2003/04,Portsmouth,Shaka Hislop
+2003/04,Southampton,Antti Niemi
+2003/04,Tottenham,Kasey Keller
+2003/04,Wolves,Michael Oakes
+2004/05,Arsenal,Jens Lehmann
+2004/05,Aston Villa,Thomas Sörensen
+2004/05,Birmingham,Maik Taylor
+2004/05,Blackburn,Brad Friedel
+2004/05,Bolton,Jussi Jääskeläinen
+2004/05,Charlton,Dean Kiely
+2004/05,Chelsea,Petr Čech
+2004/05,Crystal Palace,Gábor Király
+2004/05,Everton,Nigel Martyn
+2004/05,Fulham,Edwin van der Sar
+2004/05,Liverpool,Jerzy Dudek
+2004/05,Man City,David James
+2004/05,Man United,Roy Carroll
+2004/05,Middlesbrough,Mark Schwarzer
+2004/05,Newcastle,Shay Given
+2004/05,Norwich,Robert Green
+2004/05,Portsmouth,Shaka Hislop
+2004/05,Southampton,Antti Niemi
+2004/05,Tottenham,Paul Robinson
+2004/05,West Brom,Russell Hoult
+2005/06,Arsenal,Jens Lehmann
+2005/06,Aston Villa,Thomas Sörensen
+2005/06,Birmingham,Maik Taylor
+2005/06,Blackburn,Brad Friedel
+2005/06,Bolton,Jussi Jääskeläinen
+2005/06,Charlton,Thomas Myhre
+2005/06,Chelsea,Petr Čech
+2005/06,Everton,Nigel Martyn
+2005/06,Fulham,Mark Crossley
+2005/06,Liverpool,Pepe Reina
+2005/06,Man City,David James
+2005/06,Man United,Edwin van der Sar
+2005/06,Middlesbrough,Mark Schwarzer
+2005/06,Newcastle,Shay Given
+2005/06,Portsmouth,Jamie Ashdown
+2005/06,Sunderland,Kelvin Davis
+2005/06,Tottenham,Paul Robinson
+2005/06,West Brom,Tomasz Kuszczak
+2005/06,West Ham,Roy Carroll
+2005/06,Wigan,John Filan
+2006/07,Arsenal,Jens Lehmann
+2006/07,Aston Villa,Thomas Sörensen
+2006/07,Blackburn,Brad Friedel
+2006/07,Bolton,Jussi Jääskeläinen
+2006/07,Charlton,Scott Carson
+2006/07,Chelsea,Petr Čech
+2006/07,Everton,Tim Howard
+2006/07,Fulham,Antti Niemi
+2006/07,Liverpool,Pepe Reina
+2006/07,Man City,Nicky Weaver
+2006/07,Man United,Edwin van der Sar
+2006/07,Middlesbrough,Mark Schwarzer
+2006/07,Newcastle,Shay Given
+2006/07,Portsmouth,David James
+2006/07,Reading,Marcus Hahnemann
+2006/07,Sheffield United,Paddy Kenny
+2006/07,Tottenham,Paul Robinson
+2006/07,Watford,Ben Foster
+2006/07,West Ham,Robert Green
+2006/07,Wigan,Chris Kirkland
+2007/08,Arsenal,Manuel Almunia
+2007/08,Aston Villa,Scott Carson
+2007/08,Birmingham,Maik Taylor
+2007/08,Blackburn,Brad Friedel
+2007/08,Bolton,Jussi Jääskeläinen
+2007/08,Chelsea,Petr Čech
+2007/08,Derby,Stephen Bywater
+2007/08,Everton,Tim Howard
+2007/08,Fulham,Antti Niemi
+2007/08,Liverpool,Pepe Reina
+2007/08,Man City,Joe Hart
+2007/08,Man United,Edwin van der Sar
+2007/08,Middlesbrough,Mark Schwarzer
+2007/08,Newcastle,Steve Harper
+2007/08,Portsmouth,David James
+2007/08,Reading,Marcus Hahnemann
+2007/08,Sunderland,Craig Gordon
+2007/08,Tottenham,Paul Robinson
+2007/08,West Ham,Robert Green
+2007/08,Wigan,Chris Kirkland
+2008/09,Arsenal,Manuel Almunia
+2008/09,Aston Villa,Brad Friedel
+2008/09,Blackburn,Paul Robinson
+2008/09,Bolton,Jussi Jääskeläinen
+2008/09,Chelsea,Petr Čech
+2008/09,Everton,Tim Howard
+2008/09,Fulham,Mark Schwarzer
+2008/09,Hull,Boaz Myhill
+2008/09,Liverpool,Pepe Reina
+2008/09,Man City,Joe Hart
+2008/09,Man United,Edwin van der Sar
+2008/09,Middlesbrough,Ross Turnbull
+2008/09,Newcastle,Shay Given
+2008/09,Portsmouth,David James
+2008/09,Stoke,Thomas Sörensen
+2008/09,Sunderland,Márton Fülöp
+2008/09,Tottenham,Heurelho Gomes
+2008/09,West Brom,Scott Carson
+2008/09,West Ham,Robert Green
+2008/09,Wigan,Chris Kirkland
+2009/10,Arsenal,Manuel Almunia
+2009/10,Aston Villa,Brad Friedel
+2009/10,Birmingham,Joe Hart
+2009/10,Blackburn,Paul Robinson
+2009/10,Bolton,Jussi Jääskeläinen
+2009/10,Burnley,Brian Jensen
+2009/10,Chelsea,Petr Čech
+2009/10,Everton,Tim Howard
+2009/10,Fulham,Mark Schwarzer
+2009/10,Hull,Boaz Myhill
+2009/10,Liverpool,Pepe Reina
+2009/10,Man City,Shay Given
+2009/10,Man United,Edwin van der Sar
+2009/10,Portsmouth,David James
+2009/10,Stoke,Thomas Sörensen
+2009/10,Sunderland,Craig Gordon
+2009/10,Tottenham,Heurelho Gomes
+2009/10,West Ham,Robert Green
+2009/10,Wigan,Chris Kirkland
+2009/10,Wolves,Marcus Hahnemann
+2010/11,Arsenal,Wojciech Szczęsny
+2010/11,Aston Villa,Brad Friedel
+2010/11,Birmingham,Ben Foster
+2010/11,Blackburn,Paul Robinson
+2010/11,Blackpool,Richard Kingston
+2010/11,Bolton,Jussi Jääskeläinen
+2010/11,Chelsea,Petr Čech
+2010/11,Everton,Tim Howard
+2010/11,Fulham,Mark Schwarzer
+2010/11,Liverpool,Pepe Reina
+2010/11,Man City,Joe Hart
+2010/11,Man United,Edwin van der Sar
+2010/11,Newcastle,Tim Krul
+2010/11,Stoke,Asmir Begović
+2010/11,Sunderland,Simon Mignolet
+2010/11,Tottenham,Heurelho Gomes
+2010/11,West Brom,Scott Carson
+2010/11,West Ham,Robert Green
+2010/11,Wigan,Ali Al-Habsi
+2010/11,Wolves,Wayne Hennessey
+2011/12,Arsenal,Wojciech Szczęsny
+2011/12,Aston Villa,Shay Given
+2011/12,Blackburn,Paul Robinson
+2011/12,Bolton,Ádám Bogdán
+2011/12,Chelsea,Petr Čech
+2011/12,Everton,Tim Howard
+2011/12,Fulham,Mark Schwarzer
+2011/12,Liverpool,Pepe Reina
+2011/12,Man City,Joe Hart
+2011/12,Man United,David de Gea
+2011/12,Newcastle,Tim Krul
+2011/12,Norwich,John Ruddy
+2011/12,QPR,Paddy Kenny
+2011/12,Stoke,Asmir Begović
+2011/12,Sunderland,Simon Mignolet
+2011/12,Swansea,Michel Vorm
+2011/12,Tottenham,Brad Friedel
+2011/12,West Brom,Ben Foster
+2011/12,Wigan,Ali Al-Habsi
+2011/12,Wolves,Wayne Hennessey
+2012/13,Arsenal,Wojciech Szczęsny
+2012/13,Aston Villa,Brad Guzan
+2012/13,Chelsea,Petr Čech
+2012/13,Everton,Tim Howard
+2012/13,Fulham,Mark Schwarzer
+2012/13,Liverpool,Pepe Reina
+2012/13,Man City,Joe Hart
+2012/13,Man United,David de Gea
+2012/13,Newcastle,Tim Krul
+2012/13,Norwich,Mark Bunn
+2012/13,QPR,Júlio César
+2012/13,Reading,Adam Federici
+2012/13,Southampton,Artur Boruc
+2012/13,Stoke,Asmir Begović
+2012/13,Sunderland,Simon Mignolet
+2012/13,Swansea,Michel Vorm
+2012/13,Tottenham,Hugo Lloris
+2012/13,West Brom,Ben Foster
+2012/13,West Ham,Jussi Jääskeläinen
+2012/13,Wigan,Ali Al-Habsi
+2013/14,Arsenal,Wojciech Szczęsny
+2013/14,Aston Villa,Brad Guzan
+2013/14,Cardiff,David Marshall
+2013/14,Chelsea,Petr Čech
+2013/14,Crystal Palace,Julián Speroni
+2013/14,Everton,Tim Howard
+2013/14,Fulham,David Stockdale
+2013/14,Hull,Allan McGregor
+2013/14,Liverpool,Simon Mignolet
+2013/14,Man City,Joe Hart
+2013/14,Man United,David de Gea
+2013/14,Newcastle,Tim Krul
+2013/14,Norwich,John Ruddy
+2013/14,Southampton,Artur Boruc
+2013/14,Stoke,Asmir Begović
+2013/14,Sunderland,Vito Mannone
+2013/14,Swansea,Michel Vorm
+2013/14,Tottenham,Hugo Lloris
+2013/14,West Brom,Ben Foster
+2013/14,West Ham,Adrián
+2014/15,Arsenal,David Ospina
+2014/15,Aston Villa,Brad Guzan
+2014/15,Burnley,Tom Heaton
+2014/15,Chelsea,Thibaut Courtois
+2014/15,Crystal Palace,Julián Speroni
+2014/15,Everton,Tim Howard
+2014/15,Hull,Allan McGregor
+2014/15,Leicester,Kasper Schmeichel
+2014/15,Liverpool,Simon Mignolet
+2014/15,Man City,Joe Hart
+2014/15,Man United,David de Gea
+2014/15,Newcastle,Tim Krul
+2014/15,QPR,Robert Green
+2014/15,Southampton,Fraser Forster
+2014/15,Stoke,Asmir Begović
+2014/15,Sunderland,Costel Pantilimon
+2014/15,Swansea,Łukasz Fabiański
+2014/15,Tottenham,Hugo Lloris
+2014/15,West Brom,Ben Foster
+2014/15,West Ham,Adrián
+2015/16,Arsenal,Petr Čech
+2015/16,Aston Villa,Brad Guzan
+2015/16,Bournemouth,Artur Boruc
+2015/16,Chelsea,Thibaut Courtois
+2015/16,Crystal Palace,Wayne Hennessey
+2015/16,Everton,Tim Howard
+2015/16,Leicester,Kasper Schmeichel
+2015/16,Liverpool,Simon Mignolet
+2015/16,Man City,Joe Hart
+2015/16,Man United,David de Gea
+2015/16,Newcastle,Rob Elliot
+2015/16,Norwich,John Ruddy
+2015/16,Southampton,Fraser Forster
+2015/16,Stoke,Jack Butland
+2015/16,Sunderland,Vito Mannone
+2015/16,Swansea,Łukasz Fabiański
+2015/16,Tottenham,Hugo Lloris
+2015/16,Watford,Heurelho Gomes
+2015/16,West Brom,Boaz Myhill
+2015/16,West Ham,Adrián
+2016/17,Arsenal,Petr Čech
+2016/17,Bournemouth,Artur Boruc
+2016/17,Burnley,Tom Heaton
+2016/17,Chelsea,Thibaut Courtois
+2016/17,Crystal Palace,Wayne Hennessey
+2016/17,Everton,Maarten Stekelenburg
+2016/17,Hull,Eldin Jakupović
+2016/17,Leicester,Kasper Schmeichel
+2016/17,Liverpool,Simon Mignolet
+2016/17,Man City,Claudio Bravo
+2016/17,Man United,David de Gea
+2016/17,Middlesbrough,Víctor Valdés
+2016/17,Southampton,Fraser Forster
+2016/17,Stoke,Lee Grant
+2016/17,Sunderland,Jordan Pickford
+2016/17,Swansea,Łukasz Fabiański
+2016/17,Tottenham,Hugo Lloris
+2016/17,Watford,Heurelho Gomes
+2016/17,West Brom,Ben Foster
+2016/17,West Ham,Darren Randolph
+2017/18,Arsenal,Petr Čech
+2017/18,Bournemouth,Asmir Begović
+2017/18,Brighton,Mathew Ryan
+2017/18,Burnley,Nick Pope
+2017/18,Chelsea,Thibaut Courtois
+2017/18,Crystal Palace,Wayne Hennessey
+2017/18,Everton,Jordan Pickford
+2017/18,Huddersfield,Jonas Lössl
+2017/18,Leicester,Kasper Schmeichel
+2017/18,Liverpool,Loris Karius
+2017/18,Man City,Ederson
+2017/18,Man United,David de Gea
+2017/18,Newcastle,Rob Elliot
+2017/18,Southampton,Fraser Forster
+2017/18,Stoke,Jack Butland
+2017/18,Swansea,Łukasz Fabiański
+2017/18,Tottenham,Hugo Lloris
+2017/18,Watford,Heurelho Gomes
+2017/18,West Brom,Ben Foster
+2017/18,West Ham,Adrián
+2018/19,Arsenal,Bernd Leno
+2018/19,Bournemouth,Asmir Begović
+2018/19,Brighton,Mathew Ryan
+2018/19,Burnley,Tom Heaton
+2018/19,Cardiff,Neil Etheridge
+2018/19,Chelsea,Kepa Arrizabalaga
+2018/19,Crystal Palace,Vicente Guaita
+2018/19,Everton,Jordan Pickford
+2018/19,Fulham,Sergio Rico
+2018/19,Huddersfield,Jonas Lössl
+2018/19,Leicester,Kasper Schmeichel
+2018/19,Liverpool,Alisson
+2018/19,Man City,Ederson
+2018/19,Man United,David de Gea
+2018/19,Newcastle,Martin Dúbravka
+2018/19,Southampton,Alex McCarthy
+2018/19,Tottenham,Hugo Lloris
+2018/19,Watford,Ben Foster
+2018/19,West Ham,Łukasz Fabiański
+2018/19,Wolves,Rui Patrício
+2019/20,Arsenal,Bernd Leno
+2019/20,Aston Villa,Tom Heaton
+2019/20,Bournemouth,Aaron Ramsdale
+2019/20,Brighton,Mathew Ryan
+2019/20,Burnley,Nick Pope
+2019/20,Chelsea,Kepa Arrizabalaga
+2019/20,Crystal Palace,Vicente Guaita
+2019/20,Everton,Jordan Pickford
+2019/20,Leicester,Kasper Schmeichel
+2019/20,Liverpool,Alisson
+2019/20,Man City,Ederson
+2019/20,Man United,David de Gea
+2019/20,Newcastle,Martin Dúbravka
+2019/20,Norwich,Tim Krul
+2019/20,Sheffield United,Dean Henderson
+2019/20,Southampton,Alex McCarthy
+2019/20,Tottenham,Hugo Lloris
+2019/20,Watford,Ben Foster
+2019/20,West Ham,Łukasz Fabiański
+2019/20,Wolves,Rui Patrício
+2020/21,Arsenal,Bernd Leno
+2020/21,Aston Villa,Emiliano Martínez
+2020/21,Brighton,Robert Sánchez
+2020/21,Burnley,Nick Pope
+2020/21,Chelsea,Edouard Mendy
+2020/21,Crystal Palace,Vicente Guaita
+2020/21,Everton,Jordan Pickford
+2020/21,Fulham,Alphonse Areola
+2020/21,Leeds,Illan Meslier
+2020/21,Leicester,Kasper Schmeichel
+2020/21,Liverpool,Alisson
+2020/21,Man City,Ederson
+2020/21,Man United,David de Gea
+2020/21,Newcastle,Karl Darlow
+2020/21,Sheffield United,Aaron Ramsdale
+2020/21,Southampton,Alex McCarthy
+2020/21,Tottenham,Hugo Lloris
+2020/21,West Brom,Sam Johnstone
+2020/21,West Ham,Lukasz Fabianski
+2020/21,Wolves,Rui Patrício
+2021/22,Arsenal,Aaron Ramsdale
+2021/22,Aston Villa,Emiliano Martínez
+2021/22,Brentford,David Raya
+2021/22,Brighton,Robert Sánchez
+2021/22,Burnley,Nick Pope
+2021/22,Chelsea,Edouard Mendy
+2021/22,Crystal Palace,Vicente Guaita
+2021/22,Everton,Jordan Pickford
+2021/22,Leeds,Illan Meslier
+2021/22,Leicester,Kasper Schmeichel
+2021/22,Liverpool,Alisson
+2021/22,Man City,Ederson
+2021/22,Man United,David de Gea
+2021/22,Newcastle,Martin Dúbravka
+2021/22,Norwich,Tim Krul
+2021/22,Southampton,Fraser Forster
+2021/22,Tottenham,Hugo Lloris
+2021/22,Watford,Ben Foster
+2021/22,West Ham,Lukasz Fabianski
+2021/22,Wolves,José Sá
+2022/23,Arsenal,Aaron Ramsdale
+2022/23,Aston Villa,Emiliano Martínez
+2022/23,Bournemouth,Neto
+2022/23,Brentford,David Raya
+2022/23,Brighton,Robert Sánchez
+2022/23,Chelsea,Kepa Arrizabalaga
+2022/23,Crystal Palace,Vicente Guaita
+2022/23,Everton,Jordan Pickford
+2022/23,Fulham,Bernd Leno
+2022/23,Leeds,Illan Meslier
+2022/23,Leicester,Danny Ward
+2022/23,Liverpool,Alisson
+2022/23,Man City,Ederson
+2022/23,Man United,David de Gea
+2022/23,Newcastle,Nick Pope
+2022/23,Nott'm Forest,Dean Henderson
+2022/23,Southampton,Gavin Bazunu
+2022/23,Tottenham,Hugo Lloris
+2022/23,West Ham,Lukasz Fabianski
+2022/23,Wolves,José Sá
+2023/24,Arsenal,David Raya
+2023/24,Aston Villa,Emiliano Martínez
+2023/24,Bournemouth,Neto
+2023/24,Brentford,Mark Flekken
+2023/24,Brighton,Bart Verbruggen
+2023/24,Burnley,James Trafford
+2023/24,Chelsea,Djordje Petrovic
+2023/24,Crystal Palace,Sam Johnstone
+2023/24,Everton,Jordan Pickford
+2023/24,Fulham,Bernd Leno
+2023/24,Liverpool,Alisson
+2023/24,Luton,Thomas Kaminski
+2023/24,Man City,Ederson
+2023/24,Man United,André Onana
+2023/24,Newcastle,Martin Dúbravka
+2023/24,Nott'm Forest,Matt Turner
+2023/24,Sheffield United,Wes Foderingham
+2023/24,Tottenham,Guglielmo Vicario
+2023/24,West Ham,Alphonse Areola
+2023/24,Wolves,José Sá
+2024/25,Arsenal,David Raya
+2024/25,Aston Villa,Emiliano Martínez
+2024/25,Bournemouth,Kepa Arrizabalaga
+2024/25,Brentford,Mark Flekken
+2024/25,Brighton,Bart Verbruggen
+2024/25,Chelsea,Robert Sánchez
+2024/25,Crystal Palace,Dean Henderson
+2024/25,Everton,Jordan Pickford
+2024/25,Fulham,Bernd Leno
+2024/25,Ipswich,Arijanet Muric
+2024/25,Leicester,Mads Hermansen
+2024/25,Liverpool,Alisson
+2024/25,Man City,Ederson
+2024/25,Man United,André Onana
+2024/25,Newcastle,Nick Pope
+2024/25,Nott'm Forest,Matz Sels
+2024/25,Southampton,Aaron Ramsdale
+2024/25,Tottenham,Guglielmo Vicario
+2024/25,West Ham,Alphonse Areola
+2024/25,Wolves,José Sá

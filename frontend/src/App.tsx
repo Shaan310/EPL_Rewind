@@ -1,9 +1,11 @@
-import { useEffect, useRef, useState } from "react"
+import { useEffect, useMemo, useRef, useState } from "react"
 import Papa from "papaparse"
 import {
   ArrowLeft,
   ArrowRight,
   ChevronDown,
+  ChevronLeft,
+  ChevronRight,
   History,
   Trophy,
   Search,
@@ -12,6 +14,8 @@ import {
   Shield,
   RotateCcw,
   AlertCircle,
+  Award,
+  Medal,
 } from "lucide-react"
 
 const ATTACKERS = [
@@ -112,9 +116,9 @@ const FORMATIONS: Record<
 }
 
 const STARTING_BUDGETS: Record<"easy" | "medium" | "hard", number> = {
-  easy: 100,
-  medium: 85,
-  hard: 70,
+  easy: 200,
+  medium: 150,
+  hard: 100,
 }
 
 interface CustomSelectProps {
@@ -332,6 +336,7 @@ function CustomSelect({
   )
 }
 
+
 function App() {
   const [screen, setScreen] = useState<
     | "home"
@@ -350,6 +355,36 @@ function App() {
     "easy" | "medium" | "hard"
   >("medium")
   const [leagueFormation, setLeagueFormation] = useState<FormationKey>("4-3-3")
+  const [leagueReplacedClub, setLeagueReplacedClub] = useState("")
+  const [leagueCustomClubName, setLeagueCustomClubName] = useState("Custom XI")
+
+  // League Schedule & Simulation state
+  const [leagueSchedule, setLeagueSchedule] = useState<any[]>([])
+  const [leagueStandings, setLeagueStandings] = useState<any[]>([])
+  const [leagueMatchResults, setLeagueMatchResults] = useState<Record<number, any[]>>({})
+  const [currentSimulatedMatchday, setCurrentSimulatedMatchday] = useState(0)
+  const [viewingMatchday, setViewingMatchday] = useState(1)
+  const [leagueSimulating, setLeagueSimulating] = useState(false)
+  const [leagueInitLoading, setLeagueInitLoading] = useState(false)
+  const [leagueError, setLeagueError] = useState<string | null>(null)
+  const [leagueInitialized, setLeagueInitialized] = useState(false)
+  const [dashboardTab, setDashboardTab] = useState<"table" | "scorers" | "cleansheets" | "mvp">("table")
+  const [playerStats, setPlayerStats] = useState<{
+    goals: Record<string, number>
+    clean_sheets: Record<string, number>
+    mvp_points: Record<string, number>
+    player_meta: Record<string, { player: string; team: string; position_group: string }>
+  }>({
+    goals: {},
+    clean_sheets: {},
+    mvp_points: {},
+    player_meta: {},
+  })
+  const [leagueAwards, setLeagueAwards] = useState<{
+    golden_boot: { player: string; team: string; goals: number }[]
+    golden_glove: { player: string; team: string; clean_sheets: number }[]
+    season_mvp: { player: string; team: string; mvp_points: number }[]
+  } | null>(null)
 
   // Market & Starting XI state
   const rawRatedCsvRef = useRef<string | null>(null)
@@ -1551,10 +1586,470 @@ function App() {
         ? "Hard"
         : "Medium"
 
+  const seasonTeams = useMemo(() => {
+    if (!leagueSeason) return []
+    return Object.keys(teamSeasons)
+      .filter((team) => teamSeasons[team]?.includes(leagueSeason))
+      .sort()
+  }, [teamSeasons, leagueSeason])
+
+  const topScorersList = useMemo(() => {
+    return Object.entries(playerStats.goals)
+      .map(([key, count]) => {
+        const meta = playerStats.player_meta[key] || {
+          player: key.split("||")[0],
+          team: key.split("||")[1] || "",
+          position_group: "FWD",
+        }
+        return {
+          key,
+          player: meta.player,
+          team: meta.team,
+          position_group: meta.position_group,
+          goals: count,
+        }
+      })
+      .sort((a, b) => b.goals - a.goals || a.player.localeCompare(b.player))
+      .slice(0, 15)
+  }, [playerStats.goals, playerStats.player_meta])
+
+  const topCleanSheetsList = useMemo(() => {
+    return Object.entries(playerStats.clean_sheets)
+      .map(([key, count]) => {
+        const meta = playerStats.player_meta[key] || {
+          player: key.split("||")[0],
+          team: key.split("||")[1] || "",
+          position_group: "GK",
+        }
+        return {
+          key,
+          player: meta.player,
+          team: meta.team,
+          clean_sheets: count,
+        }
+      })
+      .sort((a, b) => b.clean_sheets - a.clean_sheets || a.player.localeCompare(b.player))
+      .slice(0, 15)
+  }, [playerStats.clean_sheets, playerStats.player_meta])
+
+  const topMvpList = useMemo(() => {
+    return Object.entries(playerStats.mvp_points)
+      .map(([key, points]) => {
+        const meta = playerStats.player_meta[key] || {
+          player: key.split("||")[0],
+          team: key.split("||")[1] || "",
+          position_group: "MID",
+        }
+        const goals = playerStats.goals[key] || 0
+        const cs = playerStats.clean_sheets[key] || 0
+        return {
+          key,
+          player: meta.player,
+          team: meta.team,
+          position_group: meta.position_group,
+          mvp_points: points,
+          goals,
+          clean_sheets: cs,
+        }
+      })
+      .sort((a, b) => b.mvp_points - a.mvp_points || a.player.localeCompare(b.player))
+      .slice(0, 15)
+  }, [playerStats.mvp_points, playerStats.player_meta, playerStats.goals, playerStats.clean_sheets])
+
+  const initLeagueSeason = async () => {
+    setLeagueInitLoading(true)
+    setLeagueError(null)
+    try {
+      const apiUrl = import.meta.env.VITE_API_URL || "http://127.0.0.1:5000"
+      const res = await fetch(`${apiUrl}/api/league/init`, {
+        method: "POST",
+        headers: { "Content-Type": "application/json" },
+        body: JSON.stringify({
+          season: leagueSeason,
+          replaced_club: leagueReplacedClub,
+          custom_club_name: leagueCustomClubName.trim() || "Custom XI",
+          custom_xi: leagueStartingXI,
+        }),
+      })
+      const data = await res.json()
+      if (!res.ok || !data.success) {
+        throw new Error(data.error || "Failed to initialize league fixtures")
+      }
+      setLeagueSchedule(data.schedule)
+      setLeagueStandings(data.initial_standings)
+      setLeagueMatchResults({})
+      setCurrentSimulatedMatchday(0)
+      setViewingMatchday(1)
+      setPlayerStats({
+        goals: {},
+        clean_sheets: {},
+        mvp_points: {},
+        player_meta: {},
+      })
+      setLeagueAwards(null)
+      setLeagueInitialized(true)
+    } catch (err: any) {
+      console.error("Error initializing league:", err)
+      setLeagueError(err.message || "Failed to initialize league simulation")
+    } finally {
+      setLeagueInitLoading(false)
+    }
+  }
+
+  useEffect(() => {
+    if (
+      screen === "league-dashboard" &&
+      leagueSeason &&
+      leagueReplacedClub &&
+      leagueStartingXI.length === 11 &&
+      !leagueInitialized &&
+      !leagueInitLoading
+    ) {
+      initLeagueSeason()
+    }
+  }, [
+    screen,
+    leagueSeason,
+    leagueReplacedClub,
+    leagueStartingXI.length,
+    leagueInitialized,
+    leagueInitLoading,
+  ])
+
+  const handleSimulateNextMatchday = async () => {
+    if (currentSimulatedMatchday >= 38 || leagueSimulating || !leagueSchedule.length) return
+    const nextMd = currentSimulatedMatchday + 1
+    const scheduleItem = leagueSchedule.find((s) => s.matchday === nextMd)
+    const fixturesList = scheduleItem?.matches || scheduleItem?.fixtures || []
+    if (!scheduleItem || !fixturesList.length) {
+      setLeagueError(`No fixture data found for matchday ${nextMd}`)
+      return
+    }
+
+    setLeagueSimulating(true)
+    setLeagueError(null)
+    try {
+      const apiUrl = import.meta.env.VITE_API_URL || "http://127.0.0.1:5000"
+      const res = await fetch(`${apiUrl}/api/league/simulate-matchday`, {
+        method: "POST",
+        headers: { "Content-Type": "application/json" },
+        body: JSON.stringify({
+          season: leagueSeason,
+          matchday: nextMd,
+          matches: fixturesList,
+          custom_club_name: leagueCustomClubName.trim() || "Custom XI",
+          replaced_club: leagueReplacedClub,
+          custom_xi: leagueStartingXI,
+          current_standings: leagueStandings,
+          player_stats: playerStats,
+        }),
+      })
+      const data = await res.json()
+      if (!res.ok || !data.success) {
+        throw new Error(data.error || `Failed to simulate matchday ${nextMd}`)
+      }
+
+      setLeagueMatchResults((prev) => ({
+        ...prev,
+        [nextMd]: data.results,
+      }))
+      setLeagueStandings(data.standings)
+      setPlayerStats(data.player_stats)
+      if (data.awards) {
+        setLeagueAwards(data.awards)
+      }
+      setCurrentSimulatedMatchday(nextMd)
+      setViewingMatchday(nextMd)
+    } catch (err: any) {
+      console.error(`Error simulating matchday ${nextMd}:`, err)
+      setLeagueError(err.message || "Simulation request failed")
+    } finally {
+      setLeagueSimulating(false)
+    }
+  }
+
+  const resetLeagueCampaign = () => {
+    setLeagueSchedule([])
+    setLeagueStandings([])
+    setLeagueMatchResults({})
+    setCurrentSimulatedMatchday(0)
+    setViewingMatchday(1)
+    setPlayerStats({
+      goals: {},
+      clean_sheets: {},
+      mvp_points: {},
+      player_meta: {},
+    })
+    setLeagueAwards(null)
+    setLeagueInitialized(false)
+    setLeagueError(null)
+    setScreen("league-setup")
+  }
+
   // -------------------------------------------------------------------------
-  // SCREEN: LEAGUE DASHBOARD (Confirmation)
+  // SCREEN: LEAGUE DASHBOARD
   // -------------------------------------------------------------------------
   if (screen === "league-dashboard") {
+    const customClubDisplayName = leagueCustomClubName.trim() || "Custom XI"
+    const rawFixtures =
+      viewingMatchday <= currentSimulatedMatchday
+        ? leagueMatchResults[viewingMatchday] || []
+        : ((leagueSchedule.find((s) => s.matchday === viewingMatchday)?.matches || leagueSchedule.find((s) => s.matchday === viewingMatchday)?.fixtures) || []).map((f: any) => ({
+            home_team: f.home_team,
+            away_team: f.away_team,
+            home_score: null,
+            away_score: null,
+            home_xg: null,
+            away_xg: null,
+            home_scorers: [],
+            away_scorers: [],
+            motm: null,
+            clean_sheet_home: false,
+            clean_sheet_away: false,
+          }))
+
+    // Always display user's chosen custom team fixture first in each matchday, with the other fixtures afterward
+    const currentFixtures = [...rawFixtures].sort((a: any, b: any) => {
+      const aIsCustom = a.home_team === customClubDisplayName || a.away_team === customClubDisplayName
+      const bIsCustom = b.home_team === customClubDisplayName || b.away_team === customClubDisplayName
+      if (aIsCustom && !bIsCustom) return -1
+      if (!aIsCustom && bIsCustom) return 1
+      return 0
+    })
+
+    const isSeasonCompleted = currentSimulatedMatchday >= 38
+    const championTeam = leagueStandings.length > 0 ? leagueStandings[0] : null
+    const customTeamStanding = leagueStandings.find((t) => t.team === customClubDisplayName)
+
+    const formatScorers = (
+      rawScorers: any,
+      teamName?: string,
+      match?: any
+    ): string[] | null => {
+      if (!rawScorers) return null
+
+      const cleanText = (val: any): string => {
+        if (!val || typeof val !== "string") return ""
+        const t = val.trim()
+        if (t === "undefined" || t === "null" || t === "None" || t === "NaN") return ""
+        return t
+      }
+
+      const cleanMin = (val: any): number | null => {
+        if (val === null || val === undefined) return null
+        if (typeof val === "string") {
+          const numStr = val.replace(/[^0-9]/g, "")
+          if (!numStr) return null
+          const n = parseInt(numStr, 10)
+          return isNaN(n) || n <= 0 || n > 120 ? null : n
+        }
+        if (typeof val === "number") {
+          return !isNaN(val) && val > 0 && val <= 120 ? Math.round(val) : null
+        }
+        return null
+      }
+
+      const getCandidatePlayers = (): string[] => {
+        if (!teamName) return []
+        const candidates: string[] = []
+
+        // 1. MOTM player if playing for this team
+        if (match?.motm?.team === teamName && cleanText(match.motm.player)) {
+          candidates.push(cleanText(match.motm.player))
+        }
+
+        // 2. Cumulative scorers for this team from playerStats
+        Object.entries(playerStats.goals || {}).forEach(([key, goals]) => {
+          if (goals > 0) {
+            const meta = playerStats.player_meta?.[key]
+            if (meta?.team === teamName && cleanText(meta.player)) {
+              const p = cleanText(meta.player)
+              if (!candidates.includes(p)) candidates.push(p)
+            }
+          }
+        })
+
+        // 3. Custom squad forwards & midfielders if custom club
+        if (teamName === customClubDisplayName && leagueStartingXI.length > 0) {
+          const priorityGroups = ["FWD", "MID", "DEF"]
+          priorityGroups.forEach((grp) => {
+            leagueStartingXI
+              .filter((p) => p.position_group === grp && cleanText(p.Player))
+              .forEach((p) => {
+                const name = cleanText(p.Player)
+                if (!candidates.includes(name)) candidates.push(name)
+              })
+          })
+        }
+
+        // 4. Historical roster from marketPlayers
+        if (marketPlayers.length > 0) {
+          const teamRoster = marketPlayers.filter((p) => p.Team === teamName && cleanText(p.Player))
+          const fwds = teamRoster.filter((p) => p.position_group === "FWD")
+          const mids = teamRoster.filter((p) => p.position_group === "MID")
+          const defs = teamRoster.filter((p) => p.position_group === "DEF")
+          ;[...fwds, ...mids, ...defs].forEach((p) => {
+            const name = cleanText(p.Player)
+            if (!candidates.includes(name)) candidates.push(name)
+          })
+        }
+
+        return candidates
+      }
+
+      const teamCandidates = getCandidatePlayers()
+      let candidateIdx = 0
+
+      const entries: { player: string; minute: number | null }[] = []
+
+      if (
+        typeof rawScorers === "object" &&
+        !Array.isArray(rawScorers) &&
+        !("player" in rawScorers) &&
+        !("Player" in rawScorers) &&
+        !("name" in rawScorers) &&
+        !("scorer" in rawScorers)
+      ) {
+        Object.entries(rawScorers).forEach(([rawName, val]) => {
+          const pName = cleanText(rawName)
+          if (!pName) return
+          if (Array.isArray(val)) {
+            val.forEach((m) => {
+              entries.push({ player: pName, minute: cleanMin(m) })
+            })
+          } else if (typeof val === "number") {
+            for (let i = 0; i < val; i++) {
+              entries.push({ player: pName, minute: null })
+            }
+          } else {
+            entries.push({ player: pName, minute: cleanMin(val) })
+          }
+        })
+      } else {
+        const list = Array.isArray(rawScorers) ? rawScorers : [rawScorers]
+
+        list.forEach((item: any) => {
+          if (item === null || item === undefined) return
+
+          if (typeof item === "number") {
+            const min = cleanMin(item)
+            if (min !== null) {
+              const assignedPlayer =
+                teamCandidates.length > 0
+                  ? teamCandidates[candidateIdx++ % teamCandidates.length]
+                  : ""
+              entries.push({ player: assignedPlayer, minute: min })
+            }
+            return
+          }
+
+          if (typeof item === "string") {
+            const cleaned = cleanText(item)
+            if (!cleaned) return
+
+            const pureMin = cleanMin(cleaned)
+            if (pureMin !== null && /^\d+['’]?$/.test(cleaned)) {
+              const assignedPlayer =
+                teamCandidates.length > 0
+                  ? teamCandidates[candidateIdx++ % teamCandidates.length]
+                  : ""
+              entries.push({ player: assignedPlayer, minute: pureMin })
+              return
+            }
+
+            const matchPattern = cleaned.match(/^(.*?)(?:\s*\(?(\d+)['’]?\)?)?$/)
+            if (matchPattern) {
+              const parsedName = cleanText(matchPattern[1])
+              const parsedMin = cleanMin(matchPattern[2])
+              if (parsedName || parsedMin !== null) {
+                entries.push({
+                  player: parsedName || (teamCandidates.length > 0 ? teamCandidates[candidateIdx++ % teamCandidates.length] : ""),
+                  minute: parsedMin,
+                })
+                return
+              }
+            }
+
+            entries.push({ player: cleaned, minute: null })
+            return
+          }
+
+          if (typeof item === "object") {
+            const playerName = cleanText(
+              item.player ??
+              item.Player ??
+              item.name ??
+              item.Name ??
+              item.scorer ??
+              item.Scorer ??
+              item.playerName ??
+              item.player_name ??
+              item.scorerName ??
+              item.scorer_name
+            )
+
+            const minute = cleanMin(
+              item.minute ??
+              item.Minute ??
+              item.min ??
+              item.Min ??
+              item.time ??
+              item.Time ??
+              item.goal_minute ??
+              item.goalMinute ??
+              item.m
+            )
+
+            const finalPlayer =
+              playerName ||
+              (teamCandidates.length > 0 && minute !== null
+                ? teamCandidates[candidateIdx++ % teamCandidates.length]
+                : "")
+
+            if (finalPlayer || minute !== null) {
+              entries.push({ player: finalPlayer, minute })
+            }
+          }
+        })
+      }
+
+      if (entries.length === 0) return null
+
+      const grouped: Record<string, number[]> = {}
+      const minutesWithoutPlayer: number[] = []
+
+      entries.forEach(({ player, minute }) => {
+        if (player) {
+          if (!grouped[player]) grouped[player] = []
+          if (minute !== null && !grouped[player].includes(minute)) {
+            grouped[player].push(minute)
+          }
+        } else if (minute !== null) {
+          if (!minutesWithoutPlayer.includes(minute)) {
+            minutesWithoutPlayer.push(minute)
+          }
+        }
+      })
+
+      const resultLines: string[] = []
+
+      Object.entries(grouped).forEach(([player, mins]) => {
+        if (!player || player === "undefined") return
+        if (mins.length > 0) {
+          const sortedMins = mins.sort((a, b) => a - b).map((m) => `${m}'`).join(", ")
+          resultLines.push(`${player} ${sortedMins}`)
+        } else {
+          resultLines.push(player)
+        }
+      })
+
+      minutesWithoutPlayer.sort((a, b) => a - b).forEach((m) => {
+        resultLines.push(`${m}'`)
+      })
+
+      return resultLines.length > 0 ? resultLines : null
+    }
+
     return (
       <main className="min-h-screen bg-[#141414] text-white">
         <nav className="flex h-20 items-center justify-between border-b border-[#141414]/10 bg-[#1E3A8A] px-8 lg:px-14">
@@ -1582,223 +2077,754 @@ function App() {
             <span>ABOUT</span>
           </div>
 
-          <div className="rounded-full border border-white px-4 py-2 text-xs font-bold uppercase tracking-widest text-white">
-            Historical Football
+          <div className="flex items-center gap-3">
+            <button
+              onClick={() => setScreen("league-squad")}
+              className="rounded-xl border border-white/20 bg-white/5 px-4 py-2 text-xs font-bold text-white transition hover:border-[#38BDF8] hover:text-[#38BDF8]"
+            >
+              Review Squad
+            </button>
+            <button
+              onClick={resetLeagueCampaign}
+              className="flex items-center gap-1.5 rounded-xl border border-white/10 bg-black/40 px-3.5 py-2 text-xs font-semibold text-white/60 transition hover:border-rose-500/40 hover:text-rose-400"
+              title="Reset campaign and start over"
+            >
+              <RotateCcw size={13} />
+              <span>Reset</span>
+            </button>
           </div>
         </nav>
 
-        <section className="relative min-h-[calc(100vh-80px)] overflow-hidden px-8 py-12 lg:px-14">
-          <div className="relative mx-auto max-w-6xl">
-            <div className="flex flex-wrap items-center justify-between gap-4 mb-8">
-              <button
-                onClick={() => setScreen("league-squad")}
-                className="flex items-center gap-2 text-sm font-semibold text-white/40 transition hover:text-white"
-              >
-                <ArrowLeft size={17} />
-                Edit Starting XI
-              </button>
-
-              <div className="flex items-center gap-3">
-                <button
-                  onClick={() => setScreen("league-formation")}
-                  className="rounded-xl border border-white/20 bg-white/5 px-4 py-2 text-xs font-bold uppercase tracking-wider text-white transition hover:border-[#38BDF8] hover:text-[#38BDF8]"
-                >
-                  Change Formation
-                </button>
-              </div>
-            </div>
-
-            {/* Header */}
-            <div className="mb-10">
-              <div className="mb-3 flex items-center gap-3">
-                <div className="h-px w-10 bg-[#38BDF8]" />
-                <span className="text-xs font-bold uppercase tracking-[0.3em] text-[#38BDF8]">
-                  LEAGUE MODE
-                </span>
-              </div>
-              <h1 className="text-4xl font-black tracking-[-0.04em] sm:text-5xl">
-                SEASON <span className="text-[#38BDF8]">READY.</span>
-              </h1>
-              <p className="mt-2 text-sm text-white/50">
-                Your starting eleven has been confirmed and registered for the {leagueSeason} Premier League campaign.
-              </p>
-            </div>
-
-            {/* Key campaign & finances overview */}
-            <div className="mb-8 grid gap-4 sm:grid-cols-2 lg:grid-cols-4">
-              <div className="rounded-2xl border border-white/10 bg-[#0a1b31]/80 p-5 backdrop-blur">
-                <p className="text-xs font-bold uppercase tracking-widest text-white/50">
-                  Season & Difficulty
-                </p>
-                <p className="mt-2 text-2xl font-black text-[#38BDF8]">
-                  {leagueSeason}
-                </p>
-                <p className="mt-1 text-xs text-white/40">
-                  {difficultyDisplay} Difficulty
-                </p>
-              </div>
-
-              <div className="rounded-2xl border border-white/10 bg-[#0a1b31]/80 p-5 backdrop-blur">
-                <p className="text-xs font-bold uppercase tracking-widest text-white/50">
-                  Tactical Formation
-                </p>
-                <p className="mt-2 text-2xl font-black text-white">
-                  {leagueFormation}
-                </p>
-                <p className="mt-1 text-xs text-white/40">
-                  {formationReq.GK}-{formationReq.DEF}-{formationReq.MID}-{formationReq.FWD} System
-                </p>
-              </div>
-
-              <div className="rounded-2xl border border-white/10 bg-[#0a1b31]/80 p-5 backdrop-blur">
-                <p className="text-xs font-bold uppercase tracking-widest text-white/50">
-                  Total Spent
-                </p>
-                <p className="mt-2 text-2xl font-black text-amber-400">
-                  £{totalSpent.toFixed(1)}m
-                </p>
-                <p className="mt-1 text-xs text-white/40">
-                  Budget: £{startingBudget}m
-                </p>
-              </div>
-
-              <div className="rounded-2xl border border-white/10 bg-[#0a1b31]/80 p-5 backdrop-blur">
-                <p className="text-xs font-bold uppercase tracking-widest text-white/50">
-                  Remaining Funds
-                </p>
-                <p className="mt-2 text-2xl font-black text-emerald-400">
-                  £{remainingBudget.toFixed(1)}m
-                </p>
-                <p className="mt-1 text-xs text-white/40">
-                  11 / 11 Starters Signed
-                </p>
-              </div>
-            </div>
-
-            {/* Team Strength Ratings Profile */}
-            <div className="mb-10 rounded-3xl border border-[#38BDF8]/20 bg-[#0a1b31]/90 p-7 backdrop-blur">
-              <div className="mb-5 flex flex-wrap items-center justify-between gap-4">
+        <section className="relative min-h-[calc(100vh-80px)] px-6 py-10 lg:px-12">
+          <div className="mx-auto max-w-7xl">
+            {/* Top Campaign Bar */}
+            <div className="mb-8 rounded-3xl border border-white/10 bg-[#0a1b31]/90 p-6 backdrop-blur shadow-xl">
+              <div className="flex flex-col gap-6 lg:flex-row lg:items-center lg:justify-between">
                 <div>
-                  <p className="text-xs font-bold uppercase tracking-widest text-[#38BDF8]">
-                    Starting XI Strength Profile
+                  <div className="flex items-center gap-2 text-xs font-bold uppercase tracking-[0.25em] text-[#38BDF8]">
+                    <span>PREMIER LEAGUE {leagueSeason}</span>
+                    <span className="text-white/30">•</span>
+                    <span className="text-white/60">{difficultyDisplay} Difficulty</span>
+                  </div>
+                  <h1 className="mt-1 text-3xl font-black tracking-tight text-white sm:text-4xl">
+                    {customClubDisplayName}
+                  </h1>
+                  <p className="mt-1 text-xs text-white/50">
+                    Taking the place of <span className="font-bold text-white/80">{leagueReplacedClub}</span> in the 20-team Barclays Premier League calendar
                   </p>
-                  <h2 className="mt-1 text-xl font-black text-white">
-                    TEAM RATINGS MATRIX
-                  </h2>
                 </div>
-                <div className="flex items-center gap-2 rounded-xl border border-[#38BDF8]/40 bg-[#38BDF8]/10 px-4 py-2 text-xs font-bold text-[#38BDF8]">
-                  <span>OVERALL RATING:</span>
-                  <span className="text-lg font-black">{overallRating}</span>
+
+                {/* Starting XI strength matrix */}
+                <div className="flex flex-wrap items-center gap-2">
+                  <div className="rounded-xl border border-white/10 bg-black/40 px-3 py-2 text-center">
+                    <p className="text-[10px] font-bold uppercase text-white/40">OVR</p>
+                    <p className="text-base font-black text-[#38BDF8]">{overallRating}</p>
+                  </div>
+                  <div className="rounded-xl border border-white/10 bg-black/40 px-3 py-2 text-center">
+                    <p className="text-[10px] font-bold uppercase text-white/40">ATT</p>
+                    <p className="text-base font-black text-rose-400">{attackRating}</p>
+                  </div>
+                  <div className="rounded-xl border border-white/10 bg-black/40 px-3 py-2 text-center">
+                    <p className="text-[10px] font-bold uppercase text-white/40">MID</p>
+                    <p className="text-base font-black text-amber-400">{midfieldRating}</p>
+                  </div>
+                  <div className="rounded-xl border border-white/10 bg-black/40 px-3 py-2 text-center">
+                    <p className="text-[10px] font-bold uppercase text-white/40">DEF</p>
+                    <p className="text-base font-black text-blue-400">{defenceRating}</p>
+                  </div>
+                  <div className="rounded-xl border border-white/10 bg-black/40 px-3 py-2 text-center">
+                    <p className="text-[10px] font-bold uppercase text-white/40">GK</p>
+                    <p className="text-base font-black text-emerald-400">{gkRating}</p>
+                  </div>
                 </div>
               </div>
 
-              <div className="grid grid-cols-2 gap-4 sm:grid-cols-5">
-                <div className="rounded-2xl border border-white/10 bg-black/40 p-4 text-center">
-                  <p className="text-[11px] font-bold uppercase tracking-wider text-white/50">Overall</p>
-                  <p className="mt-2 text-3xl font-black text-[#38BDF8]">{overallRating}</p>
-                  <p className="mt-1 text-[10px] text-white/40">11 Starters</p>
-                </div>
-                <div className="rounded-2xl border border-white/10 bg-black/40 p-4 text-center">
-                  <p className="text-[11px] font-bold uppercase tracking-wider text-white/50">Attack</p>
-                  <p className="mt-2 text-3xl font-black text-rose-400">{attackRating}</p>
-                  <p className="mt-1 text-[10px] text-white/40">{currentFWD} Forwards</p>
-                </div>
-                <div className="rounded-2xl border border-white/10 bg-black/40 p-4 text-center">
-                  <p className="text-[11px] font-bold uppercase tracking-wider text-white/50">Midfield</p>
-                  <p className="mt-2 text-3xl font-black text-amber-400">{midfieldRating}</p>
-                  <p className="mt-1 text-[10px] text-white/40">{currentMID} Midfielders</p>
-                </div>
-                <div className="rounded-2xl border border-white/10 bg-black/40 p-4 text-center">
-                  <p className="text-[11px] font-bold uppercase tracking-wider text-white/50">Defence</p>
-                  <p className="mt-2 text-3xl font-black text-blue-400">{defenceRating}</p>
-                  <p className="mt-1 text-[10px] text-white/40">{currentDEF} Defenders</p>
-                </div>
-                <div className="col-span-2 sm:col-span-1 rounded-2xl border border-white/10 bg-black/40 p-4 text-center">
-                  <p className="text-[11px] font-bold uppercase tracking-wider text-white/50">Goalkeeper</p>
-                  <p className="mt-2 text-3xl font-black text-emerald-400">{gkRating}</p>
-                  <p className="mt-1 text-[10px] text-white/40">{currentGK} Goalkeeper</p>
-                </div>
-              </div>
-            </div>
-
-            {/* Confirmed Starting XI Details */}
-            <div className="mb-10 rounded-3xl border border-white/10 bg-[#0a1b31]/80 p-7 backdrop-blur">
-              <div className="mb-6 flex items-center justify-between border-b border-white/10 pb-4">
-                <div>
-                  <h3 className="text-xl font-black text-white">CONFIRMED STARTING XI</h3>
-                  <p className="text-xs text-white/40">Formation: {leagueFormation} ({formationReq.GK} GK · {formationReq.DEF} DEF · {formationReq.MID} MID · {formationReq.FWD} FWD)</p>
-                </div>
-                <span className="rounded-full bg-[#38BDF8] px-3.5 py-1 text-xs font-black text-black">
-                  11 PLAYERS
-                </span>
-              </div>
-
-              <div className="grid gap-6 md:grid-cols-2 lg:grid-cols-4">
-                {(["GK", "DEF", "MID", "FWD"] as const).map((group) => {
-                  const groupStarters = leagueStartingXI.filter((p) => p.position_group === group)
-                  const label = group === "GK" ? "Goalkeeper" : group === "DEF" ? "Defenders" : group === "MID" ? "Midfielders" : "Forwards"
-
-                  return (
-                    <div key={group} className="space-y-2.5">
-                      <div className="flex items-center justify-between text-xs font-bold uppercase tracking-wider text-white/50 border-b border-white/10 pb-1.5">
-                        <span>{label}</span>
-                        <span className="text-[#38BDF8]">{groupStarters.length}</span>
-                      </div>
-                      {groupStarters.map((player) => (
-                        <div
-                          key={player.id}
-                          className="flex items-center justify-between rounded-xl border border-white/10 bg-black/30 p-3 transition hover:border-white/20"
-                        >
-                          <div className="flex items-center gap-2.5 overflow-hidden">
-                            <span className="flex h-7 w-7 shrink-0 items-center justify-center rounded-lg bg-[#38BDF8] text-xs font-black text-black">
-                              {player.Rating}
-                            </span>
-                            <div className="overflow-hidden">
-                              <p className="truncate text-xs font-bold text-white">{player.Player}</p>
-                              <p className="truncate text-[10px] text-white/40">{player.Team}</p>
-                            </div>
-                          </div>
-                          <span className="shrink-0 text-xs font-bold text-emerald-400">
-                            £{player.Price.toFixed(1)}m
-                          </span>
-                        </div>
-                      ))}
+              {/* Progress & Simulate Matchday Action */}
+              <div className="mt-6 border-t border-white/10 pt-6">
+                <div className="flex flex-col gap-4 sm:flex-row sm:items-center sm:justify-between">
+                  <div className="flex-1 pr-0 sm:pr-8">
+                    <div className="mb-2 flex items-center justify-between text-xs">
+                      <span className="font-bold uppercase tracking-wider text-white/60">
+                        Season Progress
+                      </span>
+                      <span className="font-black text-[#38BDF8]">
+                        MATCHDAY {currentSimulatedMatchday} / 38
+                      </span>
                     </div>
-                  )
-                })}
+                    <div className="h-3 w-full overflow-hidden rounded-full bg-white/10">
+                      <div
+                        className="h-full rounded-full bg-gradient-to-r from-[#38BDF8] to-blue-500 transition-all duration-500"
+                        style={{ width: `${(currentSimulatedMatchday / 38) * 100}%` }}
+                      />
+                    </div>
+                  </div>
+
+                  <div>
+                    {!isSeasonCompleted ? (
+                      <button
+                        disabled={leagueSimulating || leagueInitLoading || !leagueInitialized}
+                        onClick={handleSimulateNextMatchday}
+                        className="group flex w-full items-center justify-center gap-3 rounded-xl bg-[#38BDF8] px-8 py-3.5 font-black text-[#000000] shadow-lg shadow-[#38BDF8]/20 transition hover:scale-[1.02] hover:bg-[#38BDF8] disabled:cursor-not-allowed disabled:opacity-40 disabled:hover:scale-100 sm:w-auto"
+                      >
+                        {leagueSimulating ? (
+                          <>
+                            <div className="h-4 w-4 animate-spin rounded-full border-2 border-black border-t-transparent" />
+                            <span>SIMULATING MATCHDAY {currentSimulatedMatchday + 1}...</span>
+                          </>
+                        ) : (
+                          <>
+                            <span>SIMULATE MATCHDAY {currentSimulatedMatchday + 1}</span>
+                            <ArrowRight
+                              size={18}
+                              className="transition-transform group-hover:translate-x-1"
+                            />
+                          </>
+                        )}
+                      </button>
+                    ) : (
+                      <div className="flex items-center gap-2 rounded-xl border border-amber-400/40 bg-amber-400/10 px-6 py-3 font-black text-amber-300">
+                        <Trophy size={18} />
+                        <span>38 / 38 MATCHDAYS COMPLETE</span>
+                      </div>
+                    )}
+                  </div>
+                </div>
               </div>
             </div>
 
-            {/* LEAGUE SIMULATION COMING NEXT NOTICE */}
-            <div className="mb-12 rounded-3xl border border-dashed border-[#38BDF8]/40 bg-[#0a1b31]/50 p-10 text-center backdrop-blur">
-              <div className="mx-auto flex h-14 w-14 items-center justify-center rounded-2xl bg-[#38BDF8]/10 text-[#38BDF8]">
-                <Trophy size={28} />
+            {/* Error Banner */}
+            {leagueError && (
+              <div className="mb-8 flex items-center justify-between rounded-2xl border border-rose-500/30 bg-rose-500/10 p-4 text-rose-300">
+                <div className="flex items-center gap-3">
+                  <AlertCircle size={20} className="shrink-0" />
+                  <p className="text-sm font-semibold">{leagueError}</p>
+                </div>
+                <button
+                  onClick={() => {
+                    setLeagueError(null)
+                    if (!leagueInitialized) initLeagueSeason()
+                  }}
+                  className="rounded-lg bg-rose-500/20 px-3 py-1.5 text-xs font-bold transition hover:bg-rose-500/30"
+                >
+                  Retry
+                </button>
               </div>
-              <h2 className="mt-6 text-2xl font-black tracking-tight text-white">
-                LEAGUE SIMULATION COMING NEXT
-              </h2>
-              <p className="mx-auto mt-3 max-w-xl text-sm leading-6 text-white/60">
-                Your 11 starters are confirmed and locked in for the 38-match campaign. League fixtures, standings, and simulated matchdays will be available in the next update.
-              </p>
-              <div className="mt-8 flex flex-wrap justify-center gap-4">
-                <button
-                  onClick={() => setScreen("league-squad")}
-                  className="rounded-xl border border-[#38BDF8] bg-[#38BDF8]/10 px-6 py-3 text-xs font-black tracking-wider text-white transition hover:bg-[#38BDF8]/20"
-                >
-                  MODIFY STARTING XI
-                </button>
-                <button
-                  onClick={() => setScreen("league-formation")}
-                  className="rounded-xl border border-white/20 bg-white/5 px-6 py-3 text-xs font-black tracking-wider text-white transition hover:border-white/40"
-                >
-                  CHANGE FORMATION
-                </button>
-                <button
-                  onClick={() => setScreen("home")}
-                  className="rounded-xl bg-white/10 px-6 py-3 text-xs font-black tracking-wider text-white/80 transition hover:bg-white/20 hover:text-white"
-                >
-                  RETURN TO HOME
-                </button>
+            )}
+
+            {/* Season Initializing Loader */}
+            {leagueInitLoading && (
+              <div className="my-16 flex flex-col items-center justify-center text-center">
+                <div className="h-12 w-12 animate-spin rounded-full border-4 border-[#38BDF8] border-t-transparent" />
+                <h3 className="mt-6 text-xl font-black">GENERATING LEAGUE FIXTURES...</h3>
+                <p className="mt-2 text-xs text-white/50">
+                  Building full 38-match double round-robin calendar for 20 teams.
+                </p>
+              </div>
+            )}
+
+            {/* End of Season Awards Banner */}
+            {isSeasonCompleted && championTeam && (
+              <div className="mb-10 rounded-3xl border border-amber-400/30 bg-gradient-to-b from-amber-950/40 via-[#0a1b31]/95 to-[#0a1b31]/95 p-8 backdrop-blur shadow-2xl">
+                <div className="mb-6 flex flex-col items-center text-center">
+                  <div className="flex h-16 w-16 items-center justify-center rounded-2xl bg-amber-400/10 text-amber-300">
+                    <Trophy size={34} />
+                  </div>
+                  <h2 className="mt-4 text-3xl font-black tracking-tight text-white sm:text-4xl">
+                    {championTeam.team === customClubDisplayName ? (
+                      <span className="text-amber-300">CHAMPIONS OF ENGLAND! 🏆</span>
+                    ) : (
+                      <span>{championTeam.team} WINS THE TITLE</span>
+                    )}
+                  </h2>
+                  <p className="mt-2 max-w-xl text-sm text-white/70">
+                    {championTeam.team === customClubDisplayName
+                      ? `Incredible achievement! You guided ${customClubDisplayName} to Premier League glory with ${championTeam.points} points!`
+                      : `${championTeam.team} secured the ${leagueSeason} Premier League title with ${championTeam.points} points.`}
+                  </p>
+                  {customTeamStanding && (
+                    <div className="mt-4 rounded-xl border border-white/10 bg-black/40 px-5 py-2.5 text-xs">
+                      <span className="text-white/60">Your Club Finish: </span>
+                      <span className="font-black text-[#38BDF8]">
+                        #{customTeamStanding.rank} ({customTeamStanding.won}W - {customTeamStanding.drawn}D - {customTeamStanding.lost}L · {customTeamStanding.points} Pts · GD {customTeamStanding.gd > 0 ? `+${customTeamStanding.gd}` : customTeamStanding.gd})
+                      </span>
+                    </div>
+                  )}
+                </div>
+
+                {/* Official Awards Cards */}
+                <div className="grid gap-4 md:grid-cols-3">
+                  {/* Golden Boot */}
+                  <div className="rounded-2xl border border-amber-400/20 bg-black/40 p-5 text-center">
+                    <div className="mx-auto flex h-10 w-10 items-center justify-center rounded-xl bg-amber-400/10 text-amber-300">
+                      <Award size={20} />
+                    </div>
+                    <p className="mt-3 text-[11px] font-bold uppercase tracking-wider text-amber-300/80">
+                      Golden Boot
+                    </p>
+                    {leagueAwards?.golden_boot && leagueAwards.golden_boot.length > 0 ? (
+                      <div className="mt-2 space-y-1">
+                        {leagueAwards.golden_boot.map((w, idx) => (
+                          <div key={idx}>
+                            <p className="text-base font-black text-white">{w.player}</p>
+                            <p className="text-xs text-white/50">{w.team}</p>
+                            <p className="mt-1 text-sm font-black text-amber-300">{w.goals} Goals</p>
+                          </div>
+                        ))}
+                        {leagueAwards.golden_boot.length > 1 && (
+                          <span className="inline-block rounded-full bg-amber-400/10 px-2 py-0.5 text-[10px] font-bold text-amber-300">
+                            Tied Winners
+                          </span>
+                        )}
+                      </div>
+                    ) : (
+                      <p className="mt-2 text-xs text-white/40">No goals recorded</p>
+                    )}
+                  </div>
+
+                  {/* Golden Glove */}
+                  <div className="rounded-2xl border border-blue-400/20 bg-black/40 p-5 text-center">
+                    <div className="mx-auto flex h-10 w-10 items-center justify-center rounded-xl bg-blue-400/10 text-blue-300">
+                      <Shield size={20} />
+                    </div>
+                    <p className="mt-3 text-[11px] font-bold uppercase tracking-wider text-blue-300/80">
+                      Golden Glove
+                    </p>
+                    {leagueAwards?.golden_glove && leagueAwards.golden_glove.length > 0 ? (
+                      <div className="mt-2 space-y-1">
+                        {leagueAwards.golden_glove.map((w, idx) => (
+                          <div key={idx}>
+                            <p className="text-base font-black text-white">{w.player}</p>
+                            <p className="text-xs text-white/50">{w.team}</p>
+                            <p className="mt-1 text-sm font-black text-blue-300">{w.clean_sheets} Clean Sheets</p>
+                          </div>
+                        ))}
+                        {leagueAwards.golden_glove.length > 1 && (
+                          <span className="inline-block rounded-full bg-blue-400/10 px-2 py-0.5 text-[10px] font-bold text-blue-300">
+                            Tied Winners
+                          </span>
+                        )}
+                      </div>
+                    ) : (
+                      <p className="mt-2 text-xs text-white/40">No clean sheets recorded</p>
+                    )}
+                  </div>
+
+                  {/* Season MVP */}
+                  <div className="rounded-2xl border border-purple-400/20 bg-black/40 p-5 text-center">
+                    <div className="mx-auto flex h-10 w-10 items-center justify-center rounded-xl bg-purple-400/10 text-purple-300">
+                      <Medal size={20} />
+                    </div>
+                    <p className="mt-3 text-[11px] font-bold uppercase tracking-wider text-purple-300/80">
+                      Season MVP
+                    </p>
+                    {leagueAwards?.season_mvp && leagueAwards.season_mvp.length > 0 ? (
+                      <div className="mt-2 space-y-1">
+                        {leagueAwards.season_mvp.map((w, idx) => (
+                          <div key={idx}>
+                            <p className="text-base font-black text-white">{w.player}</p>
+                            <p className="text-xs text-white/50">{w.team}</p>
+                            <p className="mt-1 text-sm font-black text-purple-300">{w.mvp_points.toFixed(1)} MVP Pts</p>
+                          </div>
+                        ))}
+                        {leagueAwards.season_mvp.length > 1 && (
+                          <span className="inline-block rounded-full bg-purple-400/10 px-2 py-0.5 text-[10px] font-bold text-purple-300">
+                            Tied Winners
+                          </span>
+                        )}
+                      </div>
+                    ) : (
+                      <p className="mt-2 text-xs text-white/40">No MVP calculated</p>
+                    )}
+                  </div>
+                </div>
+              </div>
+            )}
+
+            {/* Main 2-Column Dashboard Grid */}
+            <div className="grid gap-8 lg:grid-cols-12">
+              {/* Left Column: Matchday Fixtures (7 cols) */}
+              <div className="lg:col-span-7">
+                <div className="rounded-3xl border border-white/10 bg-[#0a1b31]/80 p-6 backdrop-blur">
+                  {/* Matchday Navigator */}
+                  <div className="mb-6 flex flex-wrap items-center justify-between gap-4 border-b border-white/10 pb-4">
+                    <div className="flex items-center gap-2">
+                      <button
+                        disabled={viewingMatchday <= 1}
+                        onClick={() => setViewingMatchday((prev) => Math.max(1, prev - 1))}
+                        className="flex h-9 w-9 items-center justify-center rounded-xl border border-white/10 bg-black/30 text-white transition hover:border-white/30 disabled:opacity-30 disabled:hover:border-white/10"
+                        title="Previous Matchday"
+                      >
+                        <ChevronLeft size={18} />
+                      </button>
+
+                      <div className="relative">
+                        <select
+                          value={viewingMatchday}
+                          onChange={(e) => setViewingMatchday(Number(e.target.value))}
+                          className="appearance-none rounded-xl border border-white/20 bg-black/50 py-2 pl-4 pr-9 text-xs font-black text-white outline-none transition focus:border-[#38BDF8]"
+                        >
+                          {Array.from({ length: 38 }, (_, i) => i + 1).map((md) => (
+                            <option key={md} value={md} className="bg-[#141414] text-white">
+                              Matchday {md} {md <= currentSimulatedMatchday ? "✓ (Played)" : "⏳ (Upcoming)"}
+                            </option>
+                          ))}
+                        </select>
+                        <ChevronDown
+                          size={14}
+                          className="pointer-events-none absolute right-3 top-1/2 -translate-y-1/2 text-white/50"
+                        />
+                      </div>
+
+                      <button
+                        disabled={viewingMatchday >= 38}
+                        onClick={() => setViewingMatchday((prev) => Math.min(38, prev + 1))}
+                        className="flex h-9 w-9 items-center justify-center rounded-xl border border-white/10 bg-black/30 text-white transition hover:border-white/30 disabled:opacity-30 disabled:hover:border-white/10"
+                        title="Next Matchday"
+                      >
+                        <ChevronRight size={18} />
+                      </button>
+                    </div>
+
+                    <div className="flex items-center gap-2">
+                      {viewingMatchday <= currentSimulatedMatchday ? (
+                        <span className="rounded-full bg-emerald-500/15 px-3 py-1 text-[11px] font-black text-emerald-400">
+                          ● SIMULATED
+                        </span>
+                      ) : (
+                        <span className="rounded-full bg-amber-500/15 px-3 py-1 text-[11px] font-black text-amber-400">
+                          ○ UPCOMING
+                        </span>
+                      )}
+
+                      {currentSimulatedMatchday > 0 && viewingMatchday !== currentSimulatedMatchday && (
+                        <button
+                          onClick={() => setViewingMatchday(currentSimulatedMatchday)}
+                          className="rounded-xl border border-[#38BDF8]/30 bg-[#38BDF8]/10 px-3 py-1 text-[11px] font-bold text-[#38BDF8] transition hover:bg-[#38BDF8]/20"
+                        >
+                          Latest MD
+                        </button>
+                      )}
+                    </div>
+                  </div>
+
+                  {/* Matches List */}
+                  <div className="space-y-3.5">
+                    {currentFixtures.length === 0 ? (
+                      <div className="py-12 text-center text-xs text-white/40">
+                        No matches found for matchday {viewingMatchday}.
+                      </div>
+                    ) : (
+                      currentFixtures.map((m: any, idx: number) => {
+                        const isCustomMatch =
+                          m.home_team === customClubDisplayName ||
+                          m.away_team === customClubDisplayName
+
+                        const isPlayed = m.home_score !== null && m.away_score !== null
+                        const homeScorersText = formatScorers(m.home_scorers, m.home_team, m)
+                        const awayScorersText = formatScorers(m.away_scorers, m.away_team, m)
+
+                        return (
+                          <div
+                            key={idx}
+                            className={`rounded-2xl border p-4 transition ${
+                              isCustomMatch
+                                ? "border-[#38BDF8] bg-[#0d2745]/90 shadow-md shadow-[#38BDF8]/10"
+                                : "border-white/10 bg-black/30 hover:border-white/20"
+                            }`}
+                          >
+                            {/* Match Header with Custom Badge */}
+                            {isCustomMatch && (
+                              <div className="mb-2 flex items-center justify-between">
+                                <span className="rounded-md bg-[#38BDF8] px-2 py-0.5 text-[9px] font-black text-black">
+                                  ★ YOUR MATCH
+                                </span>
+                                {isPlayed && m.home_xg !== null && m.away_xg !== null && (
+                                  <span className="text-[10px] text-white/50">
+                                    xG: {m.home_xg.toFixed(2)} - {m.away_xg.toFixed(2)}
+                                  </span>
+                                )}
+                              </div>
+                            )}
+
+                            {/* Scoreline / Teams */}
+                            <div className="grid grid-cols-12 items-center gap-2">
+                              {/* Home team */}
+                              <div className="col-span-5 text-right">
+                                <span
+                                  className={`text-sm font-black truncate block ${
+                                    m.home_team === customClubDisplayName
+                                      ? "text-[#38BDF8]"
+                                      : "text-white"
+                                  }`}
+                                  title={m.home_team}
+                                >
+                                  {m.home_team}
+                                </span>
+                              </div>
+
+                              {/* Score or VS */}
+                              <div className="col-span-2 text-center">
+                                {isPlayed ? (
+                                  <span className="rounded-lg bg-black/60 px-3 py-1 text-base font-black tracking-wider text-white">
+                                    {m.home_score} - {m.away_score}
+                                  </span>
+                                ) : (
+                                  <span className="text-xs font-bold text-white/30">VS</span>
+                                )}
+                              </div>
+
+                              {/* Away team */}
+                              <div className="col-span-5 text-left">
+                                <span
+                                  className={`text-sm font-black truncate block ${
+                                    m.away_team === customClubDisplayName
+                                      ? "text-[#38BDF8]"
+                                      : "text-white"
+                                  }`}
+                                  title={m.away_team}
+                                >
+                                  {m.away_team}
+                                </span>
+                              </div>
+                            </div>
+
+                            {/* Scorers info (if played) */}
+                            {isPlayed && (
+                              <div className="mt-3 border-t border-white/5 pt-2.5 text-[11px] text-white/60">
+                                {(homeScorersText || awayScorersText) ? (
+                                  <div className="grid grid-cols-2 gap-3">
+                                    <div className="text-right text-emerald-400">
+                                      {homeScorersText?.map((txt, sIdx) => (
+                                        <div key={sIdx} className="truncate">⚽ {txt}</div>
+                                      ))}
+                                    </div>
+                                    <div className="text-left text-emerald-400">
+                                      {awayScorersText?.map((txt, sIdx) => (
+                                        <div key={sIdx} className="truncate">⚽ {txt}</div>
+                                      ))}
+                                    </div>
+                                  </div>
+                                ) : (
+                                  <div className="text-center text-[10px] text-white/30">
+                                    No goals scored
+                                  </div>
+                                )}
+
+                                {/* MOTM & Clean sheets */}
+                                {m.motm && (
+                                  <div className="mt-2 flex flex-wrap items-center justify-between gap-2 border-t border-white/5 pt-1.5 text-[10px]">
+                                    <span className="text-amber-300 font-bold truncate">
+                                      ★ MOTM: {m.motm.player} ({m.motm.team}) · {m.motm.rating}
+                                    </span>
+                                    <div className="flex gap-2">
+                                      {m.clean_sheet_home && (
+                                        <span className="text-blue-300">🛡️ CS: {m.home_team}</span>
+                                      )}
+                                      {m.clean_sheet_away && (
+                                        <span className="text-blue-300">🛡️ CS: {m.away_team}</span>
+                                      )}
+                                    </div>
+                                  </div>
+                                )}
+                              </div>
+                            )}
+
+                            {/* Upcoming fixture notice */}
+                            {!isPlayed && (
+                              <div className="mt-2 text-center text-[10px] text-white/30">
+                                Scheduled Matchday {viewingMatchday}
+                              </div>
+                            )}
+                          </div>
+                        )
+                      })
+                    )}
+                  </div>
+                </div>
+              </div>
+
+              {/* Right Column: Standings & Leaderboards (5 cols) */}
+              <div className="lg:col-span-5">
+                <div className="sticky top-6 rounded-3xl border border-white/10 bg-[#0a1b31]/80 p-6 backdrop-blur">
+                  {/* Tabs */}
+                  <div className="mb-4 grid grid-cols-4 gap-1 rounded-xl bg-black/40 p-1">
+                    <button
+                      onClick={() => setDashboardTab("table")}
+                      className={`rounded-lg py-2 text-xs font-black transition ${
+                        dashboardTab === "table"
+                          ? "bg-[#38BDF8] text-black shadow"
+                          : "text-white/60 hover:text-white"
+                      }`}
+                    >
+                      TABLE
+                    </button>
+                    <button
+                      onClick={() => setDashboardTab("scorers")}
+                      className={`rounded-lg py-2 text-xs font-black transition ${
+                        dashboardTab === "scorers"
+                          ? "bg-[#38BDF8] text-black shadow"
+                          : "text-white/60 hover:text-white"
+                      }`}
+                    >
+                      SCORERS
+                    </button>
+                    <button
+                      onClick={() => setDashboardTab("cleansheets")}
+                      className={`rounded-lg py-2 text-xs font-black transition ${
+                        dashboardTab === "cleansheets"
+                          ? "bg-[#38BDF8] text-black shadow"
+                          : "text-white/60 hover:text-white"
+                      }`}
+                    >
+                      GLOVES
+                    </button>
+                    <button
+                      onClick={() => setDashboardTab("mvp")}
+                      className={`rounded-lg py-2 text-xs font-black transition ${
+                        dashboardTab === "mvp"
+                          ? "bg-[#38BDF8] text-black shadow"
+                          : "text-white/60 hover:text-white"
+                      }`}
+                    >
+                      MVP
+                    </button>
+                  </div>
+
+                  {/* TAB 1: League Table */}
+                  {dashboardTab === "table" && (
+                    <div>
+                      <div className="overflow-x-auto">
+                        <table className="w-full text-left text-xs">
+                          <thead>
+                            <tr className="border-b border-white/10 text-[10px] font-bold uppercase tracking-wider text-white/40">
+                              <th className="py-2 pl-2">#</th>
+                              <th className="py-2">Club</th>
+                              <th className="py-2 text-center">P</th>
+                              <th className="py-2 text-center">W</th>
+                              <th className="py-2 text-center">D</th>
+                              <th className="py-2 text-center">L</th>
+                              <th className="py-2 text-center">GD</th>
+                              <th className="py-2 pr-2 text-right">PTS</th>
+                            </tr>
+                          </thead>
+                          <tbody className="divide-y divide-white/5">
+                            {leagueStandings.map((row) => {
+                              const isCustom = row.team === customClubDisplayName
+                              const isTop4 = row.rank <= 4
+                              const isFifth = row.rank === 5
+                              const isRelegation = row.rank >= 18
+
+                              return (
+                                <tr
+                                  key={row.team}
+                                  className={`transition ${
+                                    isCustom
+                                      ? "bg-[#38BDF8]/20 font-black text-white"
+                                      : "hover:bg-white/5 text-white/80"
+                                  }`}
+                                >
+                                  <td className="py-2 pl-2 font-bold">
+                                    <span
+                                      className={`inline-flex h-5 w-5 items-center justify-center rounded text-[10px] ${
+                                        isTop4
+                                          ? "bg-blue-500/20 text-blue-300 font-black"
+                                          : isFifth
+                                            ? "bg-amber-500/20 text-amber-300 font-bold"
+                                            : isRelegation
+                                              ? "bg-rose-500/20 text-rose-300 font-bold"
+                                              : "text-white/50"
+                                      }`}
+                                    >
+                                      {row.rank}
+                                    </span>
+                                  </td>
+                                  <td className="py-2 truncate max-w-[130px]" title={row.team}>
+                                    <span className={isCustom ? "text-[#38BDF8]" : ""}>
+                                      {row.team}
+                                    </span>
+                                    {isCustom && (
+                                      <span className="ml-1 text-[9px] font-black text-[#38BDF8]">
+                                        (YOU)
+                                      </span>
+                                    )}
+                                  </td>
+                                  <td className="py-2 text-center text-white/50">{row.played}</td>
+                                  <td className="py-2 text-center text-white/60">{row.won}</td>
+                                  <td className="py-2 text-center text-white/40">{row.drawn}</td>
+                                  <td className="py-2 text-center text-white/40">{row.lost}</td>
+                                  <td className="py-2 text-center font-bold text-white/70">
+                                    {row.gd > 0 ? `+${row.gd}` : row.gd}
+                                  </td>
+                                  <td className="py-2 pr-2 text-right font-black text-white">
+                                    {row.points}
+                                  </td>
+                                </tr>
+                              )
+                            })}
+                          </tbody>
+                        </table>
+                      </div>
+
+                      {/* Standings Legend */}
+                      <div className="mt-4 flex flex-wrap items-center justify-between gap-2 border-t border-white/10 pt-3 text-[10px] text-white/40">
+                        <div className="flex items-center gap-1.5">
+                          <span className="h-2 w-2 rounded-full bg-blue-400" />
+                          <span>1-4 Champions League</span>
+                        </div>
+                        <div className="flex items-center gap-1.5">
+                          <span className="h-2 w-2 rounded-full bg-amber-400" />
+                          <span>5 Europa League</span>
+                        </div>
+                        <div className="flex items-center gap-1.5">
+                          <span className="h-2 w-2 rounded-full bg-rose-400" />
+                          <span>18-20 Relegation</span>
+                        </div>
+                      </div>
+                    </div>
+                  )}
+
+                  {/* TAB 2: Top Scorers */}
+                  {dashboardTab === "scorers" && (
+                    <div>
+                      <div className="mb-3 flex items-center justify-between text-xs font-bold uppercase tracking-wider text-[#38BDF8]">
+                        <span>Golden Boot Race</span>
+                        <span>Goals</span>
+                      </div>
+                      {topScorersList.length === 0 ? (
+                        <div className="py-12 text-center text-xs text-white/40">
+                          No goals simulated yet.
+                        </div>
+                      ) : (
+                        <div className="max-h-[500px] space-y-2 overflow-y-auto pr-1">
+                          {topScorersList.map((p, idx) => {
+                            const isCustomPlayer = p.team === customClubDisplayName
+                            return (
+                              <div
+                                key={p.key}
+                                className={`flex items-center justify-between rounded-xl border p-2.5 transition ${
+                                  isCustomPlayer
+                                    ? "border-[#38BDF8] bg-[#38BDF8]/15"
+                                    : "border-white/5 bg-black/30 hover:border-white/15"
+                                }`}
+                              >
+                                <div className="flex items-center gap-2.5 overflow-hidden">
+                                  <span className="flex h-5 w-5 shrink-0 items-center justify-center rounded bg-black/50 text-[10px] font-black text-white/70">
+                                    {idx + 1}
+                                  </span>
+                                  <div className="overflow-hidden">
+                                    <p className={`truncate text-xs font-black ${isCustomPlayer ? "text-[#38BDF8]" : "text-white"}`}>
+                                      {p.player}
+                                    </p>
+                                    <p className="truncate text-[10px] text-white/40">
+                                      {p.team} · {p.position_group}
+                                    </p>
+                                  </div>
+                                </div>
+                                <span className="shrink-0 text-sm font-black text-amber-300">
+                                  {p.goals}
+                                </span>
+                              </div>
+                            )
+                          })}
+                        </div>
+                      )}
+                    </div>
+                  )}
+
+                  {/* TAB 3: Clean Sheets */}
+                  {dashboardTab === "cleansheets" && (
+                    <div>
+                      <div className="mb-3 flex items-center justify-between text-xs font-bold uppercase tracking-wider text-blue-300">
+                        <span>Golden Glove Race</span>
+                        <span>Clean Sheets</span>
+                      </div>
+                      {topCleanSheetsList.length === 0 ? (
+                        <div className="py-12 text-center text-xs text-white/40">
+                          No clean sheets simulated yet.
+                        </div>
+                      ) : (
+                        <div className="max-h-[500px] space-y-2 overflow-y-auto pr-1">
+                          {topCleanSheetsList.map((p, idx) => {
+                            const isCustomGK = p.team === customClubDisplayName
+                            return (
+                              <div
+                                key={p.key}
+                                className={`flex items-center justify-between rounded-xl border p-2.5 transition ${
+                                  isCustomGK
+                                    ? "border-[#38BDF8] bg-[#38BDF8]/15"
+                                    : "border-white/5 bg-black/30 hover:border-white/15"
+                                }`}
+                              >
+                                <div className="flex items-center gap-2.5 overflow-hidden">
+                                  <span className="flex h-5 w-5 shrink-0 items-center justify-center rounded bg-black/50 text-[10px] font-black text-white/70">
+                                    {idx + 1}
+                                  </span>
+                                  <div className="overflow-hidden">
+                                    <p className={`truncate text-xs font-black ${isCustomGK ? "text-[#38BDF8]" : "text-white"}`}>
+                                      {p.player}
+                                    </p>
+                                    <p className="truncate text-[10px] text-white/40">{p.team}</p>
+                                  </div>
+                                </div>
+                                <span className="shrink-0 text-sm font-black text-blue-300">
+                                  {p.clean_sheets}
+                                </span>
+                              </div>
+                            )
+                          })}
+                        </div>
+                      )}
+                    </div>
+                  )}
+
+                  {/* TAB 4: MVP Race */}
+                  {dashboardTab === "mvp" && (
+                    <div>
+                      <div className="mb-3 flex items-center justify-between text-xs font-bold uppercase tracking-wider text-purple-300">
+                        <span>Season MVP Race</span>
+                        <span>MVP Points</span>
+                      </div>
+                      {topMvpList.length === 0 ? (
+                        <div className="py-12 text-center text-xs text-white/40">
+                          No MVP points recorded yet.
+                        </div>
+                      ) : (
+                        <div className="max-h-[500px] space-y-2 overflow-y-auto pr-1">
+                          {topMvpList.map((p, idx) => {
+                            const isCustomPlayer = p.team === customClubDisplayName
+                            return (
+                              <div
+                                key={p.key}
+                                className={`flex items-center justify-between rounded-xl border p-2.5 transition ${
+                                  isCustomPlayer
+                                    ? "border-[#38BDF8] bg-[#38BDF8]/15"
+                                    : "border-white/5 bg-black/30 hover:border-white/15"
+                                }`}
+                              >
+                                <div className="flex items-center gap-2.5 overflow-hidden">
+                                  <span className="flex h-5 w-5 shrink-0 items-center justify-center rounded bg-black/50 text-[10px] font-black text-white/70">
+                                    {idx + 1}
+                                  </span>
+                                  <div className="overflow-hidden">
+                                    <p className={`truncate text-xs font-black ${isCustomPlayer ? "text-[#38BDF8]" : "text-white"}`}>
+                                      {p.player}
+                                    </p>
+                                    <p className="truncate text-[10px] text-white/40">
+                                      {p.team} · {p.position_group} ({p.goals}G, {p.clean_sheets}CS)
+                                    </p>
+                                  </div>
+                                </div>
+                                <span className="shrink-0 text-sm font-black text-purple-300">
+                                  {p.mvp_points.toFixed(1)}
+                                </span>
+                              </div>
+                            )
+                          })}
+                        </div>
+                      )}
+                    </div>
+                  )}
+                </div>
               </div>
             </div>
           </div>
@@ -2661,7 +3687,9 @@ function App() {
                       const nextSeason = e.target.value
                       if (nextSeason !== leagueSeason) {
                         setLeagueSeason(nextSeason)
+                        setLeagueReplacedClub("")
                         setLeagueStartingXI([])
+                        setLeagueInitialized(false)
                       }
                     }}
                     className="w-full appearance-none rounded-xl border border-white bg-grey text-[#FFFFFF] px-5 py-4 outline-none transition focus:border-[#38BDF8]"
@@ -2684,7 +3712,63 @@ function App() {
                 </div>
               </div>
 
-              {/* 2. Difficulty */}
+              {/* 2. Club to Replace */}
+              <div className="mb-8">
+                <label className="mb-2 block text-xs font-bold uppercase tracking-widest text-white/70">
+                  CLUB TO REPLACE <span className="text-[#38BDF8]">*</span>
+                </label>
+
+                <div className="relative">
+                  <select
+                    value={leagueReplacedClub}
+                    disabled={!leagueSeason}
+                    onChange={(e) => {
+                      setLeagueReplacedClub(e.target.value)
+                      setLeagueInitialized(false)
+                    }}
+                    className="w-full appearance-none rounded-xl border border-white bg-grey text-[#FFFFFF] px-5 py-4 outline-none transition focus:border-[#38BDF8] disabled:opacity-40 disabled:cursor-not-allowed"
+                  >
+                    <option value="" disabled className="bg-[#141414] text-white">
+                      {leagueSeason ? "SELECT CLUB TO REPLACE (20 TEAMS)" : "SELECT A SEASON FIRST"}
+                    </option>
+
+                    {seasonTeams.map((team) => (
+                      <option key={team} value={team} className="bg-[#141414] text-white">
+                        {team}
+                      </option>
+                    ))}
+                  </select>
+
+                  <ChevronDown
+                    size={18}
+                    className="pointer-events-none absolute right-5 top-1/2 -translate-y-1/2 text-white/60"
+                  />
+                </div>
+                <p className="mt-2 text-xs text-white/40">
+                  Your custom XI replaces this club in the 20-team fixture schedule for the 38-match season.
+                </p>
+              </div>
+
+              {/* 3. Custom Club Name */}
+              <div className="mb-8">
+                <label className="mb-2 block text-xs font-bold uppercase tracking-widest text-white/70">
+                  CUSTOM CLUB NAME (OPTIONAL)
+                </label>
+
+                <input
+                  type="text"
+                  maxLength={30}
+                  value={leagueCustomClubName}
+                  onChange={(e) => setLeagueCustomClubName(e.target.value)}
+                  placeholder="e.g. Invincibles XI, London Stars, Custom XI"
+                  className="w-full rounded-xl border border-white/20 bg-[#141414]/80 px-5 py-4 text-white placeholder-white/30 outline-none transition focus:border-[#38BDF8]"
+                />
+                <p className="mt-2 text-xs text-white/40">
+                  This custom club name will appear across the league table and matchday scoreboards.
+                </p>
+              </div>
+
+              {/* 4. Difficulty */}
               <div className="mb-10">
                 <label className="mb-3 block text-xs font-bold uppercase tracking-widest text-white/70">
                   DIFFICULTY
@@ -2693,9 +3777,9 @@ function App() {
                 <div className="grid gap-4 sm:grid-cols-3">
                   {(
                     [
-                      { id: "easy", name: "EASY", budget: "£100m", label: "Easy — £100m" },
-                      { id: "medium", name: "MEDIUM", budget: "£85m", label: "Medium — £85m" },
-                      { id: "hard", name: "HARD", budget: "£70m", label: "Hard — £70m" },
+                      { id: "easy", name: "EASY", budget: "£200m", label: "Easy — £200m" },
+                      { id: "medium", name: "MEDIUM", budget: "£150m", label: "Medium — £150m" },
+                      { id: "hard", name: "HARD", budget: "£100m", label: "Hard — £100m" },
                     ] as const
                   ).map((item) => {
                     const isSelected = leagueDifficulty === item.id
@@ -2739,19 +3823,18 @@ function App() {
                 </div>
               </div>
 
-              {/* 3. Continue button */}
+              {/* 5. Continue button */}
               <div className="flex justify-end pt-2">
                 <button
-                  disabled={!leagueSeason || !leagueDifficulty}
+                  disabled={!leagueSeason || !leagueDifficulty || !leagueReplacedClub}
                   onClick={() => {
-                    if (leagueSeason && leagueDifficulty) {
+                    if (leagueSeason && leagueDifficulty && leagueReplacedClub) {
                       setScreen("league-formation")
                     }
                   }}
                   className="group flex items-center gap-4 rounded-xl bg-[#38BDF8] px-7 py-4 font-black text-white transition hover:scale-[1.02] hover:bg-[#38BDF8] disabled:cursor-not-allowed disabled:opacity-30 disabled:hover:scale-100"
                 >
                   CONTINUE
-
                   <ArrowRight
                     size={20}
                     className="transition-transform group-hover:translate-x-1"
