@@ -3944,8 +3944,8 @@ function App() {
                 <div className="grid gap-4 sm:grid-cols-3">
                   {(
                     [
-                      { id: "easy", name: "EASY", budget: "£200m", label: "Easy — £200m" },
-                      { id: "medium", name: "MEDIUM", budget: "£150m", label: "Medium — £150m" },
+                      { id: "easy", name: "EASY", budget: "£250m", label: "Easy — £250m" },
+                      { id: "medium", name: "MEDIUM", budget: "£200m", label: "Medium — £200m" },
                       { id: "hard", name: "HARD", budget: "£100m", label: "Hard — £100m" },
                     ] as const
                   ).map((item) => {
