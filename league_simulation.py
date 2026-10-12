@@ -14,6 +14,7 @@ Handles:
 
 import os
 import random
+import functools
 from collections import Counter
 import numpy as np
 import pandas as pd
@@ -337,6 +338,7 @@ def get_representative_xi(team, season):
 # PREDICT EXPECTED GOALS (Random Forest Baseline)
 # ---------------------------------------------------------------------------
 
+@functools.lru_cache(maxsize=4096)
 def predict_baseline_xg(home_team, home_season, away_team, away_season):
     """
     Computes baseline expected goals (home_xg, away_xg) using the trained Random Forest model.
@@ -401,34 +403,67 @@ def compute_squad_ratings(squad_xi):
     }
 
 
-def apply_custom_team_modifiers(base_home_xg, base_away_xg, custom_is_home, custom_ratings):
+def apply_custom_team_modifiers(
+    base_home_xg,
+    base_away_xg,
+    custom_is_home,
+    custom_ratings,
+    replaced_ratings=None,
+    replaced_club=None,
+    season=None,
+):
     """
-    Applies documented, modest modifiers using the custom XI ratings.
-    - Stronger attack/midfield improves the custom team's expected goals.
-    - Stronger defence/GK/midfield suppresses opponent's expected goals.
-    - Base rating threshold is 76 (typical starter league average).
+    Applies calibrated ratings modifiers comparing the custom XI against the replaced club's baseline.
+    - Attack & Midfield improve custom team expected goals relative to the replaced club.
+    - Defence, GK & Midfield reduce opponent expected goals relative to the replaced club.
+    - Uses blended proportional + additive scaling calibrated to realistic Premier League performance:
+      * Attack advantage produces realistic goal output (+35 to +40 goals over season for +15 rating delta).
+      * Defence/GK advantage reduces opponent expected goals (+15 rating delta saves ~35 goals over season).
+    - Prevents excessively weak influence (ensuring a 90 OVR squad replacing a relegation club finishes near the top)
+      while avoiding overpowering bonuses.
     """
-    diff_att = custom_ratings["attack"] - 76.0
-    diff_mid = custom_ratings["midfield"] - 76.0
-    diff_def = custom_ratings["defence"] - 76.0
-    diff_gk = custom_ratings["gk"] - 76.0
+    if replaced_ratings is None:
+        if replaced_club and season:
+            rep_xi = get_representative_xi(replaced_club, season)
+            replaced_ratings = compute_squad_ratings(rep_xi)
+        else:
+            # Fallback to realistic starter baseline if replaced club not provided
+            replaced_ratings = {
+                "attack": 85.0,
+                "midfield": 82.0,
+                "defence": 85.0,
+                "gk": 88.0,
+                "overall": 85.0,
+            }
 
-    # Custom team scoring multiplier
-    att_boost = 1.0 + (diff_att * 0.012) + (diff_mid * 0.008)
-    att_boost = max(0.65, min(1.45, att_boost))
+    diff_att = float(custom_ratings.get("attack", 76)) - float(replaced_ratings.get("attack", 76))
+    diff_mid = float(custom_ratings.get("midfield", 76)) - float(replaced_ratings.get("midfield", 76))
+    diff_def = float(custom_ratings.get("defence", 76)) - float(replaced_ratings.get("defence", 76))
+    diff_gk  = float(custom_ratings.get("gk", 76)) - float(replaced_ratings.get("gk", 76))
 
-    # Opponent scoring multiplier against custom team
-    def_factor = 1.0 - (diff_def * 0.010) - (diff_gk * 0.008) - (diff_mid * 0.004)
-    def_factor = max(0.65, min(1.45, def_factor))
+    # Offensive delta: Attack rating is primary (70%), supported by midfield creativity (30%)
+    off_delta = (0.70 * diff_att) + (0.30 * diff_mid)
+
+    # Defensive delta: Defensive unit (50%), goalkeeper shot-stopping (30%), midfield screening (20%)
+    def_delta = (0.50 * diff_def) + (0.30 * diff_gk) + (0.20 * diff_mid)
+
+    # Multiplier and additive calibrations:
+    # att_mult scales the fixture context; att_add provides an absolute quality lift/floor
+    att_mult = max(0.35, min(2.50, 1.0 + (off_delta * 0.022)))
+    att_add  = off_delta * 0.038
+
+    # def_mult suppresses opponent expected goals; def_sub provides absolute defensive suppression
+    def_mult = max(0.30, min(2.50, 1.0 - (def_delta * 0.025)))
+    def_sub  = def_delta * 0.038
 
     if custom_is_home:
-        home_xg = max(0.2, base_home_xg * att_boost)
-        away_xg = max(0.2, base_away_xg * def_factor)
+        custom_xg = max(0.20, (base_home_xg * att_mult) + att_add)
+        opp_xg    = max(0.20, (base_away_xg * def_mult) - def_sub)
+        return custom_xg, opp_xg
     else:
-        home_xg = max(0.2, base_home_xg * def_factor)
-        away_xg = max(0.2, base_away_xg * att_boost)
-
-    return home_xg, away_xg
+        opp_xg    = max(0.20, (base_home_xg * def_mult) - def_sub)
+        custom_xg = max(0.20, (base_away_xg * att_mult) + att_add)
+        return opp_xg, custom_xg
 
 
 # ---------------------------------------------------------------------------
@@ -507,7 +542,8 @@ def simulate_league_fixture(
     replaced_club,
     custom_club_name,
     custom_xi,
-    custom_ratings=None
+    custom_ratings=None,
+    replaced_ratings=None,
 ):
     """
     Simulates a single fixture within League Mode.
@@ -526,8 +562,17 @@ def simulate_league_fixture(
     if custom_is_home or custom_is_away:
         if custom_ratings is None:
             custom_ratings = compute_squad_ratings(custom_xi)
+        if replaced_ratings is None and replaced_club:
+            rep_xi = get_representative_xi(replaced_club, season)
+            replaced_ratings = compute_squad_ratings(rep_xi)
         home_xg, away_xg = apply_custom_team_modifiers(
-            base_home_xg, base_away_xg, custom_is_home, custom_ratings
+            base_home_xg=base_home_xg,
+            base_away_xg=base_away_xg,
+            custom_is_home=custom_is_home,
+            custom_ratings=custom_ratings,
+            replaced_ratings=replaced_ratings,
+            replaced_club=replaced_club,
+            season=season,
         )
     else:
         home_xg, away_xg = base_home_xg, base_away_xg
@@ -664,6 +709,7 @@ def simulate_matchday(
     Simulates all 10 fixtures for a specific matchday.
     """
     custom_ratings = compute_squad_ratings(custom_xi)
+    rep_ratings = compute_squad_ratings(get_representative_xi(replaced_club, season))
     results = []
 
     for f in fixtures:
@@ -677,6 +723,7 @@ def simulate_matchday(
             custom_club_name=custom_club_name,
             custom_xi=custom_xi,
             custom_ratings=custom_ratings,
+            replaced_ratings=rep_ratings,
         )
         res["id"] = f.get("id", "")
         res["matchday"] = matchday_num or f.get("matchday", 1)

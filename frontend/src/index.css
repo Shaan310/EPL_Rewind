@@ -1,1 +1,48 @@
 @import "tailwindcss";
+
+@keyframes matchCardReveal {
+  0% {
+    opacity: 0;
+    transform: translateY(8px) scale(0.98);
+  }
+  100% {
+    opacity: 1;
+    transform: translateY(0) scale(1);
+  }
+}
+
+@keyframes scorePop {
+  0% {
+    opacity: 0;
+    transform: scale(0.85);
+  }
+  60% {
+    transform: scale(1.08);
+  }
+  100% {
+    transform: scale(1);
+  }
+}
+
+@keyframes scorerFadeIn {
+  0% {
+    opacity: 0;
+    transform: translateY(4px);
+  }
+  100% {
+    opacity: 1;
+    transform: translateY(0);
+  }
+}
+
+.animate-card-reveal {
+  animation: matchCardReveal 0.35s cubic-bezier(0.16, 1, 0.3, 1) both;
+}
+
+.animate-score-pop {
+  animation: scorePop 0.35s cubic-bezier(0.34, 1.56, 0.64, 1) both;
+}
+
+.animate-scorer-fade {
+  animation: scorerFadeIn 0.35s ease-out both;
+}

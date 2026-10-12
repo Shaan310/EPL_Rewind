@@ -16,6 +16,8 @@ import {
   AlertCircle,
   Award,
   Medal,
+  Play,
+  Pause,
 } from "lucide-react"
 
 const ATTACKERS = [
@@ -385,6 +387,22 @@ function App() {
     golden_glove: { player: string; team: string; clean_sheets: number }[]
     season_mvp: { player: string; team: string; mvp_points: number }[]
   } | null>(null)
+
+  const [isAutoSimulating, setIsAutoSimulating] = useState(false)
+  const [simSpeed, setSimSpeed] = useState<"1x" | "2x">("1x")
+  const isAutoSimulatingRef = useRef(false)
+  const simSpeedRef = useRef<"1x" | "2x">("1x")
+
+  const toggleSimSpeed = (speed: "1x" | "2x") => {
+    setSimSpeed(speed)
+    simSpeedRef.current = speed
+  }
+
+  useEffect(() => {
+    return () => {
+      isAutoSimulatingRef.current = false
+    }
+  }, [])
 
   // Market & Starting XI state
   const rawRatedCsvRef = useRef<string | null>(null)
@@ -1716,8 +1734,89 @@ function App() {
     leagueInitLoading,
   ])
 
-  const handleSimulateNextMatchday = async () => {
-    if (currentSimulatedMatchday >= 38 || leagueSimulating || !leagueSchedule.length) return
+  const handleStartAutoSimulation = async () => {
+    if (currentSimulatedMatchday >= 38 || isAutoSimulatingRef.current || !leagueSchedule.length) return
+
+    isAutoSimulatingRef.current = true
+    setIsAutoSimulating(true)
+    setLeagueSimulating(true)
+    setLeagueError(null)
+
+    let curMd = currentSimulatedMatchday
+    let curStandings = leagueStandings
+    let curPlayerStats = playerStats
+
+    const apiUrl = import.meta.env.VITE_API_URL || "http://127.0.0.1:5000"
+
+    try {
+      while (curMd < 38 && isAutoSimulatingRef.current) {
+        const nextMd = curMd + 1
+        const scheduleItem = leagueSchedule.find((s) => s.matchday === nextMd)
+        const fixturesList = scheduleItem?.matches || scheduleItem?.fixtures || []
+        if (!scheduleItem || !fixturesList.length) {
+          throw new Error(`No fixture data found for matchday ${nextMd}`)
+        }
+
+        const res = await fetch(`${apiUrl}/api/league/simulate-matchday`, {
+          method: "POST",
+          headers: { "Content-Type": "application/json" },
+          body: JSON.stringify({
+            season: leagueSeason,
+            matchday: nextMd,
+            matches: fixturesList,
+            custom_club_name: leagueCustomClubName.trim() || "Custom XI",
+            replaced_club: leagueReplacedClub,
+            custom_xi: leagueStartingXI,
+            current_standings: curStandings,
+            player_stats: curPlayerStats,
+          }),
+        })
+
+        const data = await res.json()
+        if (!res.ok || !data.success) {
+          throw new Error(data.error || `Failed to simulate matchday ${nextMd}`)
+        }
+
+        curStandings = data.standings
+        curPlayerStats = data.player_stats
+        curMd = nextMd
+
+        setLeagueMatchResults((prev) => ({
+          ...prev,
+          [nextMd]: data.results,
+        }))
+        setLeagueStandings(data.standings)
+        setPlayerStats(data.player_stats)
+        if (data.awards) {
+          setLeagueAwards(data.awards)
+        }
+        setCurrentSimulatedMatchday(nextMd)
+        setViewingMatchday(nextMd)
+
+        // If another matchday remains and auto-sim is still active, wait before simulating next matchday
+        if (curMd < 38 && isAutoSimulatingRef.current) {
+          const delay = simSpeedRef.current === "2x" ? 350 : 800
+          await new Promise((resolve) => setTimeout(resolve, delay))
+        }
+      }
+    } catch (err: any) {
+      console.error(`Simulation loop error at matchday ${curMd + 1}:`, err)
+      setLeagueError(err.message || "Simulation request failed")
+    } finally {
+      isAutoSimulatingRef.current = false
+      setIsAutoSimulating(false)
+      setLeagueSimulating(false)
+    }
+  }
+
+  const handlePauseAutoSimulation = () => {
+    isAutoSimulatingRef.current = false
+    setIsAutoSimulating(false)
+    setLeagueSimulating(false)
+  }
+
+  const handleSimulateSingleMatchday = async () => {
+    if (currentSimulatedMatchday >= 38 || leagueSimulating || isAutoSimulating || !leagueSchedule.length) return
     const nextMd = currentSimulatedMatchday + 1
     const scheduleItem = leagueSchedule.find((s) => s.matchday === nextMd)
     const fixturesList = scheduleItem?.matches || scheduleItem?.fixtures || []
@@ -1769,6 +1868,9 @@ function App() {
   }
 
   const resetLeagueCampaign = () => {
+    isAutoSimulatingRef.current = false
+    setIsAutoSimulating(false)
+    setLeagueSimulating(false)
     setLeagueSchedule([])
     setLeagueStandings([])
     setLeagueMatchResults({})
@@ -2141,12 +2243,20 @@ function App() {
 
               {/* Progress & Simulate Matchday Action */}
               <div className="mt-6 border-t border-white/10 pt-6">
-                <div className="flex flex-col gap-4 sm:flex-row sm:items-center sm:justify-between">
+                <div className="flex flex-col gap-5 sm:flex-row sm:items-center sm:justify-between">
                   <div className="flex-1 pr-0 sm:pr-8">
                     <div className="mb-2 flex items-center justify-between text-xs">
-                      <span className="font-bold uppercase tracking-wider text-white/60">
-                        Season Progress
-                      </span>
+                      <div className="flex items-center gap-2">
+                        <span className="font-bold uppercase tracking-wider text-white/60">
+                          Season Progress
+                        </span>
+                        {isAutoSimulating && (
+                          <span className="flex items-center gap-1.5 rounded-full bg-[#38BDF8]/15 px-2.5 py-0.5 text-[10px] font-black text-[#38BDF8] animate-pulse">
+                            <span className="h-1.5 w-1.5 rounded-full bg-[#38BDF8]" />
+                            LIVE SIMULATION
+                          </span>
+                        )}
+                      </div>
                       <span className="font-black text-[#38BDF8]">
                         MATCHDAY {currentSimulatedMatchday} / 38
                       </span>
@@ -2159,28 +2269,74 @@ function App() {
                     </div>
                   </div>
 
-                  <div>
+                  {/* Actions: SIMULATE SEASON / PAUSE / RESUME / SPEED */}
+                  <div className="flex flex-wrap items-center gap-3">
+                    {/* Speed Controls (shown whenever not completed) */}
+                    {!isSeasonCompleted && (
+                      <div className="flex items-center rounded-xl border border-white/10 bg-black/40 p-1 text-xs">
+                        <button
+                          onClick={() => toggleSimSpeed("1x")}
+                          className={`rounded-lg px-2.5 py-1.5 font-black transition ${
+                            simSpeed === "1x"
+                              ? "bg-[#38BDF8] text-black shadow"
+                              : "text-white/60 hover:text-white"
+                          }`}
+                          title="Normal Speed (~800ms delay)"
+                        >
+                          1x
+                        </button>
+                        <button
+                          onClick={() => toggleSimSpeed("2x")}
+                          className={`rounded-lg px-2.5 py-1.5 font-black transition ${
+                            simSpeed === "2x"
+                              ? "bg-[#38BDF8] text-black shadow"
+                              : "text-white/60 hover:text-white"
+                          }`}
+                          title="Fast Speed (~350ms delay)"
+                        >
+                          2x
+                        </button>
+                      </div>
+                    )}
+
                     {!isSeasonCompleted ? (
-                      <button
-                        disabled={leagueSimulating || leagueInitLoading || !leagueInitialized}
-                        onClick={handleSimulateNextMatchday}
-                        className="group flex w-full items-center justify-center gap-3 rounded-xl bg-[#38BDF8] px-8 py-3.5 font-black text-[#000000] shadow-lg shadow-[#38BDF8]/20 transition hover:scale-[1.02] hover:bg-[#38BDF8] disabled:cursor-not-allowed disabled:opacity-40 disabled:hover:scale-100 sm:w-auto"
-                      >
-                        {leagueSimulating ? (
-                          <>
-                            <div className="h-4 w-4 animate-spin rounded-full border-2 border-black border-t-transparent" />
-                            <span>SIMULATING MATCHDAY {currentSimulatedMatchday + 1}...</span>
-                          </>
-                        ) : (
-                          <>
-                            <span>SIMULATE MATCHDAY {currentSimulatedMatchday + 1}</span>
-                            <ArrowRight
-                              size={18}
-                              className="transition-transform group-hover:translate-x-1"
-                            />
-                          </>
-                        )}
-                      </button>
+                      isAutoSimulating ? (
+                        <button
+                          onClick={handlePauseAutoSimulation}
+                          className="flex items-center gap-2.5 rounded-xl border border-amber-400/40 bg-amber-400/20 px-6 py-3 font-black text-amber-300 shadow-lg shadow-amber-400/10 transition hover:bg-amber-400/30 active:scale-95"
+                        >
+                          <Pause size={18} className="shrink-0" />
+                          <span>PAUSE SEASON</span>
+                        </button>
+                      ) : currentSimulatedMatchday > 0 ? (
+                        <div className="flex items-center gap-2">
+                          <button
+                            disabled={leagueSimulating || leagueInitLoading || !leagueInitialized}
+                            onClick={handleStartAutoSimulation}
+                            className="group flex items-center justify-center gap-2.5 rounded-xl bg-[#38BDF8] px-6 py-3 font-black text-[#000000] shadow-lg shadow-[#38BDF8]/20 transition hover:scale-[1.02] hover:bg-[#38BDF8] disabled:cursor-not-allowed disabled:opacity-40"
+                          >
+                            <Play size={18} className="fill-black shrink-0" />
+                            <span>RESUME SEASON</span>
+                          </button>
+                          <button
+                            disabled={leagueSimulating || leagueInitLoading || !leagueInitialized}
+                            onClick={handleSimulateSingleMatchday}
+                            className="rounded-xl border border-white/20 bg-black/40 px-4 py-3 text-xs font-black text-white/80 transition hover:border-white/40 hover:text-white disabled:opacity-40"
+                            title="Simulate just the next matchday"
+                          >
+                            +1 MD
+                          </button>
+                        </div>
+                      ) : (
+                        <button
+                          disabled={leagueSimulating || leagueInitLoading || !leagueInitialized}
+                          onClick={handleStartAutoSimulation}
+                          className="group flex w-full items-center justify-center gap-3 rounded-xl bg-[#38BDF8] px-8 py-3.5 font-black text-[#000000] shadow-lg shadow-[#38BDF8]/20 transition hover:scale-[1.02] hover:bg-[#38BDF8] disabled:cursor-not-allowed disabled:opacity-40 disabled:hover:scale-100 sm:w-auto"
+                        >
+                          <Play size={18} className="fill-black shrink-0" />
+                          <span>SIMULATE SEASON</span>
+                        </button>
+                      )
                     ) : (
                       <div className="flex items-center gap-2 rounded-xl border border-amber-400/40 bg-amber-400/10 px-6 py-3 font-black text-amber-300">
                         <Trophy size={18} />
@@ -2425,10 +2581,15 @@ function App() {
 
                         return (
                           <div
-                            key={idx}
-                            className={`rounded-2xl border p-4 transition ${
+                            key={`${viewingMatchday}-${idx}`}
+                            style={{ animationDelay: isPlayed ? `${idx * 35}ms` : undefined }}
+                            className={`rounded-2xl border p-4 transition-all duration-300 ${
+                              isPlayed ? "animate-card-reveal" : ""
+                            } ${
                               isCustomMatch
-                                ? "border-[#38BDF8] bg-[#0d2745]/90 shadow-md shadow-[#38BDF8]/10"
+                                ? `border-[#38BDF8] bg-[#0d2745]/90 shadow-md shadow-[#38BDF8]/10 ${
+                                    isAutoSimulating ? "ring-2 ring-[#38BDF8]/60 shadow-lg shadow-[#38BDF8]/20" : ""
+                                  }`
                                 : "border-white/10 bg-black/30 hover:border-white/20"
                             }`}
                           >
@@ -2465,7 +2626,10 @@ function App() {
                               {/* Score or VS */}
                               <div className="col-span-2 text-center">
                                 {isPlayed ? (
-                                  <span className="rounded-lg bg-black/60 px-3 py-1 text-base font-black tracking-wider text-white">
+                                  <span
+                                    style={{ animationDelay: `${idx * 35 + 80}ms` }}
+                                    className="inline-block animate-score-pop rounded-lg bg-black/60 px-3 py-1 text-base font-black tracking-wider text-white border border-white/10"
+                                  >
                                     {m.home_score} - {m.away_score}
                                   </span>
                                 ) : (
@@ -2490,7 +2654,10 @@ function App() {
 
                             {/* Scorers info (if played) */}
                             {isPlayed && (
-                              <div className="mt-3 border-t border-white/5 pt-2.5 text-[11px] text-white/60">
+                              <div
+                                style={{ animationDelay: `${idx * 35 + 140}ms` }}
+                                className="animate-scorer-fade mt-3 border-t border-white/5 pt-2.5 text-[11px] text-white/60"
+                              >
                                 {(homeScorersText || awayScorersText) ? (
                                   <div className="grid grid-cols-2 gap-3">
                                     <div className="text-right text-emerald-400">

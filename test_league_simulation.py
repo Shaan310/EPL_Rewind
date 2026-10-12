@@ -95,6 +95,122 @@ def run_tests():
     print(f"  Golden Glove leader: {awards['golden_glove']['winners']}")
     print(f"  Season MVP leader: {awards['season_mvp']['winners']}")
 
+    print("\n6. Testing team-strength calibration (Strong XI vs Weak XI under comparable conditions)...")
+    season = "2020/21"
+    replaced = "West Brom"
+    season_teams = ls.get_season_teams(season)
+    full_schedule = ls.generate_double_round_robin_schedule(
+        [custom_team if t == replaced else t for t in season_teams]
+    )
+
+    strong_xi = [
+        {"Player": "GK Prime", "Position": "Goalkeeper", "position_group": "GK", "Rating": 94},
+        {"Player": "CB Prime 1", "Position": "Centre-Back", "position_group": "DEF", "Rating": 97},
+        {"Player": "CB Prime 2", "Position": "Centre-Back", "position_group": "DEF", "Rating": 97},
+        {"Player": "LB Prime", "Position": "Left-Back", "position_group": "DEF", "Rating": 97},
+        {"Player": "RB Prime", "Position": "Right-Back", "position_group": "DEF", "Rating": 97},
+        {"Player": "CM Prime 1", "Position": "Central Midfield", "position_group": "MID", "Rating": 83},
+        {"Player": "CM Prime 2", "Position": "Central Midfield", "position_group": "MID", "Rating": 83},
+        {"Player": "LM Prime", "Position": "Left Midfield", "position_group": "MID", "Rating": 83},
+        {"Player": "RM Prime", "Position": "Right Midfield", "position_group": "MID", "Rating": 83},
+        {"Player": "ST Prime 1", "Position": "Centre-Forward", "position_group": "FWD", "Rating": 95},
+        {"Player": "ST Prime 2", "Position": "Centre-Forward", "position_group": "FWD", "Rating": 95},
+    ]
+
+    weak_xi = [
+        {"Player": "GK Weak", "Position": "Goalkeeper", "position_group": "GK", "Rating": 74},
+        {"Player": "CB Weak 1", "Position": "Centre-Back", "position_group": "DEF", "Rating": 74},
+        {"Player": "CB Weak 2", "Position": "Centre-Back", "position_group": "DEF", "Rating": 74},
+        {"Player": "LB Weak", "Position": "Left-Back", "position_group": "DEF", "Rating": 74},
+        {"Player": "RB Weak", "Position": "Right-Back", "position_group": "DEF", "Rating": 74},
+        {"Player": "CM Weak 1", "Position": "Central Midfield", "position_group": "MID", "Rating": 74},
+        {"Player": "CM Weak 2", "Position": "Central Midfield", "position_group": "MID", "Rating": 74},
+        {"Player": "LM Weak", "Position": "Left Midfield", "position_group": "MID", "Rating": 74},
+        {"Player": "RM Weak", "Position": "Right Midfield", "position_group": "MID", "Rating": 74},
+        {"Player": "ST Weak 1", "Position": "Centre-Forward", "position_group": "FWD", "Rating": 74},
+        {"Player": "ST Weak 2", "Position": "Centre-Forward", "position_group": "FWD", "Rating": 74},
+    ]
+
+    strong_pts_list, strong_gf_list, strong_ga_list, strong_rank_list = [], [], [], []
+    weak_pts_list, weak_gf_list, weak_ga_list, weak_rank_list = [], [], [], []
+
+    num_sim_seasons = 12
+    for _ in range(num_sim_seasons):
+        # Simulate full season for strong XI
+        season_results_strong = []
+        for md in full_schedule:
+            md_res = ls.simulate_matchday(
+                season=season,
+                replaced_club=replaced,
+                custom_club_name=custom_team,
+                custom_xi=strong_xi,
+                fixtures=md["fixtures"],
+                matchday_num=md["matchday"],
+            )
+            season_results_strong.extend(md_res)
+        table_strong = ls.compute_standings(
+            [custom_team if t == replaced else t for t in season_teams],
+            season_results_strong
+        )
+        custom_row_strong = next(r for r in table_strong if r["team"] == custom_team)
+        strong_pts_list.append(custom_row_strong["points"])
+        strong_gf_list.append(custom_row_strong["gf"])
+        strong_ga_list.append(custom_row_strong["ga"])
+        strong_rank_list.append(custom_row_strong["rank"])
+
+        # Simulate full season for weak XI under identical conditions
+        season_results_weak = []
+        for md in full_schedule:
+            md_res = ls.simulate_matchday(
+                season=season,
+                replaced_club=replaced,
+                custom_club_name=custom_team,
+                custom_xi=weak_xi,
+                fixtures=md["fixtures"],
+                matchday_num=md["matchday"],
+            )
+            season_results_weak.extend(md_res)
+        table_weak = ls.compute_standings(
+            [custom_team if t == replaced else t for t in season_teams],
+            season_results_weak
+        )
+        custom_row_weak = next(r for r in table_weak if r["team"] == custom_team)
+        weak_pts_list.append(custom_row_weak["points"])
+        weak_gf_list.append(custom_row_weak["gf"])
+        weak_ga_list.append(custom_row_weak["ga"])
+        weak_rank_list.append(custom_row_weak["rank"])
+
+    avg_strong_pts = sum(strong_pts_list) / len(strong_pts_list)
+    avg_weak_pts = sum(weak_pts_list) / len(weak_pts_list)
+    avg_strong_gf = sum(strong_gf_list) / len(strong_gf_list)
+    avg_weak_gf = sum(weak_gf_list) / len(weak_gf_list)
+    avg_strong_ga = sum(strong_ga_list) / len(strong_ga_list)
+    avg_weak_ga = sum(weak_ga_list) / len(weak_ga_list)
+    avg_strong_rank = sum(strong_rank_list) / len(strong_rank_list)
+    avg_weak_rank = sum(weak_rank_list) / len(weak_rank_list)
+
+    print(f"  Strong XI (90 OVR): Pts={avg_strong_pts:.1f}, GF={avg_strong_gf:.1f}, GA={avg_strong_ga:.1f}, Avg Finish={avg_strong_rank:.1f}th")
+    print(f"  Weak XI   (74 OVR): Pts={avg_weak_pts:.1f}, GF={avg_weak_gf:.1f}, GA={avg_weak_ga:.1f}, Avg Finish={avg_weak_rank:.1f}th")
+
+    # Assertions demonstrating team-strength calibration
+    assert avg_strong_pts >= avg_weak_pts + 35.0, (
+        f"Expected Strong XI to earn at least 35 more points on average than Weak XI, got {avg_strong_pts:.1f} vs {avg_weak_pts:.1f}"
+    )
+    assert avg_strong_gf > avg_weak_gf + 25.0, (
+        f"Expected Strong XI to score significantly more goals, got {avg_strong_gf:.1f} vs {avg_weak_gf:.1f}"
+    )
+    assert avg_strong_ga < avg_weak_ga - 35.0, (
+        f"Expected Strong XI to concede significantly fewer goals, got {avg_strong_ga:.1f} vs {avg_weak_ga:.1f}"
+    )
+    assert avg_strong_rank < avg_weak_rank, (
+        f"Expected Strong XI to rank higher (smaller rank number), got {avg_strong_rank:.1f} vs {avg_weak_rank:.1f}"
+    )
+    assert avg_strong_pts >= 65.0, (
+        f"Expected Strong 90 OVR XI replacing West Brom to average at least 65 points, got {avg_strong_pts:.1f}"
+    )
+
+    print("  OK: Strong XI decisively outperforms Weak XI on points, attack (GF), defence (GA), and table finish.")
+
     print("\nALL BACKEND UNIT TESTS PASSED SUCCESSFULLY!")
 
 if __name__ == "__main__":
