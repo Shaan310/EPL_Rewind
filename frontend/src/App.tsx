@@ -118,8 +118,8 @@ const FORMATIONS: Record<
 }
 
 const STARTING_BUDGETS: Record<"easy" | "medium" | "hard", number> = {
-  easy: 200,
-  medium: 150,
+  easy: 250,
+  medium: 200,
   hard: 100,
 }
 
