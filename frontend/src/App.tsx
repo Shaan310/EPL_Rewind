@@ -406,8 +406,7 @@ function App() {
 
   // Market & Starting XI state
   const rawRatedCsvRef = useRef<string | null>(null)
-  const randomOrderMapRef = useRef<Record<string, number>>({})
-  const [, setRandomSeed] = useState(0)
+  const [randomOrderMap, setRandomOrderMap] = useState<Record<string, number>>({})
 
   const [marketPlayers, setMarketPlayers] = useState<RatedPlayer[]>([])
   const [marketLoading, setMarketLoading] = useState(false)
@@ -602,7 +601,7 @@ function App() {
         deduplicated.forEach((p) => {
           initialRandomMap[p.id] = Math.random()
         })
-        randomOrderMapRef.current = initialRandomMap
+        setRandomOrderMap(initialRandomMap)
         setMarketPlayers(deduplicated)
         setMarketLoading(false)
         setMarketPage(1)
@@ -705,6 +704,390 @@ function App() {
     }
   }
 
+  // Shared League Mode budget & Starting XI calculations
+  const startingBudget = STARTING_BUDGETS[leagueDifficulty]
+  const totalSpent =
+    Math.round(leagueStartingXI.reduce((sum, p) => sum + p.Price, 0) * 10) / 10
+  const remainingBudget =
+    Math.round((startingBudget - totalSpent) * 10) / 10
+
+  const formationReq = FORMATIONS[leagueFormation]
+  const currentGK = leagueStartingXI.filter((p) => p.position_group === "GK").length
+  const currentDEF = leagueStartingXI.filter((p) => p.position_group === "DEF").length
+  const currentMID = leagueStartingXI.filter((p) => p.position_group === "MID").length
+  const currentFWD = leagueStartingXI.filter((p) => p.position_group === "FWD").length
+
+  const isXIComplete =
+    leagueStartingXI.length === 11 &&
+    currentGK === formationReq.GK &&
+    currentDEF === formationReq.DEF &&
+    currentMID === formationReq.MID &&
+    currentFWD === formationReq.FWD &&
+    remainingBudget >= 0
+
+  const handleAddPlayer = (player: RatedPlayer) => {
+    if (leagueStartingXI.some((p) => p.id === player.id)) return
+    if (leagueStartingXI.length >= 11) return
+    if (player.position_group === "GK" && currentGK >= formationReq.GK) return
+    if (player.position_group === "DEF" && currentDEF >= formationReq.DEF) return
+    if (player.position_group === "MID" && currentMID >= formationReq.MID) return
+    if (player.position_group === "FWD" && currentFWD >= formationReq.FWD) return
+    if (totalSpent + player.Price > startingBudget + 0.001) return
+
+    setLeagueStartingXI((prev) => [...prev, player])
+  }
+
+  const handleRemovePlayer = (playerId: string) => {
+    setLeagueStartingXI((prev) => prev.filter((p) => p.id !== playerId))
+  }
+
+  const handleSelectFormation = (f: FormationKey) => {
+    if (f !== leagueFormation) {
+      setLeagueFormation(f)
+      setLeagueStartingXI([])
+    }
+  }
+
+  const reshuffleRandomOrder = (playersList: RatedPlayer[] = marketPlayers) => {
+    const map: Record<string, number> = {}
+    playersList.forEach((p) => {
+      map[p.id] = Math.random()
+    })
+    setRandomOrderMap(map)
+    setMarketPage(1)
+  }
+
+  // Rating profile
+  const xiFWDPlayers = leagueStartingXI.filter((p) => p.position_group === "FWD")
+  const xiMIDPlayers = leagueStartingXI.filter((p) => p.position_group === "MID")
+  const xiDEFPlayers = leagueStartingXI.filter((p) => p.position_group === "DEF")
+  const xiGKPlayers = leagueStartingXI.filter((p) => p.position_group === "GK")
+
+  const attackRating =
+    xiFWDPlayers.length > 0
+      ? Math.round(
+          xiFWDPlayers.reduce((sum, p) => sum + p.Rating, 0) /
+            xiFWDPlayers.length
+        )
+      : 0
+
+  const midfieldRating =
+    xiMIDPlayers.length > 0
+      ? Math.round(
+          xiMIDPlayers.reduce((sum, p) => sum + p.Rating, 0) /
+            xiMIDPlayers.length
+        )
+      : 0
+
+  const defenceRating =
+    xiDEFPlayers.length > 0
+      ? Math.round(
+          xiDEFPlayers.reduce((sum, p) => sum + p.Rating, 0) /
+            xiDEFPlayers.length
+        )
+      : 0
+
+  const gkRating = xiGKPlayers.length > 0 ? xiGKPlayers[0].Rating : 0
+
+  const overallRating =
+    leagueStartingXI.length > 0
+      ? Math.round(
+          leagueStartingXI.reduce((sum, p) => sum + p.Rating, 0) /
+            leagueStartingXI.length
+        )
+      : 0
+
+  const difficultyDisplay =
+    leagueDifficulty === "easy"
+      ? "Easy"
+      : leagueDifficulty === "hard"
+        ? "Hard"
+        : "Medium"
+
+  const seasonTeams = useMemo(() => {
+    if (!leagueSeason) return []
+    return Object.keys(teamSeasons)
+      .filter((team) => teamSeasons[team]?.includes(leagueSeason))
+      .sort()
+  }, [teamSeasons, leagueSeason])
+
+  const topScorersList = useMemo(() => {
+    return Object.entries(playerStats.goals)
+      .map(([key, count]) => {
+        const meta = playerStats.player_meta[key] || {
+          player: key.split("||")[0],
+          team: key.split("||")[1] || "",
+          position_group: "FWD",
+        }
+        return {
+          key,
+          player: meta.player,
+          team: meta.team,
+          position_group: meta.position_group,
+          goals: count,
+        }
+      })
+      .sort((a, b) => b.goals - a.goals || a.player.localeCompare(b.player))
+      .slice(0, 15)
+  }, [playerStats.goals, playerStats.player_meta])
+
+  const topCleanSheetsList = useMemo(() => {
+    return Object.entries(playerStats.clean_sheets)
+      .map(([key, count]) => {
+        const meta = playerStats.player_meta[key] || {
+          player: key.split("||")[0],
+          team: key.split("||")[1] || "",
+          position_group: "GK",
+        }
+        return {
+          key,
+          player: meta.player,
+          team: meta.team,
+          clean_sheets: count,
+        }
+      })
+      .sort((a, b) => b.clean_sheets - a.clean_sheets || a.player.localeCompare(b.player))
+      .slice(0, 15)
+  }, [playerStats.clean_sheets, playerStats.player_meta])
+
+  const topMvpList = useMemo(() => {
+    return Object.entries(playerStats.mvp_points)
+      .map(([key, points]) => {
+        const meta = playerStats.player_meta[key] || {
+          player: key.split("||")[0],
+          team: key.split("||")[1] || "",
+          position_group: "MID",
+        }
+        const goals = playerStats.goals[key] || 0
+        const cs = playerStats.clean_sheets[key] || 0
+        return {
+          key,
+          player: meta.player,
+          team: meta.team,
+          position_group: meta.position_group,
+          mvp_points: points,
+          goals,
+          clean_sheets: cs,
+        }
+      })
+      .sort((a, b) => b.mvp_points - a.mvp_points || a.player.localeCompare(b.player))
+      .slice(0, 15)
+  }, [playerStats.mvp_points, playerStats.player_meta, playerStats.goals, playerStats.clean_sheets])
+
+  const initLeagueSeason = async () => {
+    setLeagueInitLoading(true)
+    setLeagueError(null)
+    try {
+      const apiUrl = import.meta.env.VITE_API_URL || "http://127.0.0.1:5000"
+      const res = await fetch(`${apiUrl}/api/league/init`, {
+        method: "POST",
+        headers: { "Content-Type": "application/json" },
+        body: JSON.stringify({
+          season: leagueSeason,
+          replaced_club: leagueReplacedClub,
+          custom_club_name: leagueCustomClubName.trim() || "Custom XI",
+          custom_xi: leagueStartingXI,
+        }),
+      })
+      const data = await res.json()
+      if (!res.ok || !data.success) {
+        throw new Error(data.error || "Failed to initialize league fixtures")
+      }
+      setLeagueSchedule(data.schedule)
+      setLeagueStandings(data.initial_standings)
+      setLeagueMatchResults({})
+      setCurrentSimulatedMatchday(0)
+      setViewingMatchday(1)
+      setPlayerStats({
+        goals: {},
+        clean_sheets: {},
+        mvp_points: {},
+        player_meta: {},
+      })
+      setLeagueAwards(null)
+      setLeagueInitialized(true)
+    } catch (err: any) {
+      console.error("Error initializing league:", err)
+      setLeagueError(err.message || "Failed to initialize league simulation")
+    } finally {
+      setLeagueInitLoading(false)
+    }
+  }
+
+  useEffect(() => {
+    if (
+      screen === "league-dashboard" &&
+      leagueSeason &&
+      leagueReplacedClub &&
+      leagueStartingXI.length === 11 &&
+      !leagueInitialized &&
+      !leagueInitLoading
+    ) {
+      initLeagueSeason()
+    }
+  }, [
+    screen,
+    leagueSeason,
+    leagueReplacedClub,
+    leagueStartingXI.length,
+    leagueInitialized,
+    leagueInitLoading,
+  ])
+
+  const handleStartAutoSimulation = async () => {
+    if (currentSimulatedMatchday >= 38 || isAutoSimulatingRef.current || !leagueSchedule.length) return
+
+    isAutoSimulatingRef.current = true
+    setIsAutoSimulating(true)
+    setLeagueSimulating(true)
+    setLeagueError(null)
+
+    let curMd = currentSimulatedMatchday
+    let curStandings = leagueStandings
+    let curPlayerStats = playerStats
+
+    const apiUrl = import.meta.env.VITE_API_URL || "http://127.0.0.1:5000"
+
+    try {
+      while (curMd < 38 && isAutoSimulatingRef.current) {
+        const nextMd = curMd + 1
+        const scheduleItem = leagueSchedule.find((s) => s.matchday === nextMd)
+        const fixturesList = scheduleItem?.matches || scheduleItem?.fixtures || []
+        if (!scheduleItem || !fixturesList.length) {
+          throw new Error(`No fixture data found for matchday ${nextMd}`)
+        }
+
+        const res = await fetch(`${apiUrl}/api/league/simulate-matchday`, {
+          method: "POST",
+          headers: { "Content-Type": "application/json" },
+          body: JSON.stringify({
+            season: leagueSeason,
+            matchday: nextMd,
+            matches: fixturesList,
+            custom_club_name: leagueCustomClubName.trim() || "Custom XI",
+            replaced_club: leagueReplacedClub,
+            custom_xi: leagueStartingXI,
+            current_standings: curStandings,
+            player_stats: curPlayerStats,
+          }),
+        })
+
+        const data = await res.json()
+        if (!res.ok || !data.success) {
+          throw new Error(data.error || `Failed to simulate matchday ${nextMd}`)
+        }
+
+        curStandings = data.standings
+        curPlayerStats = data.player_stats
+        curMd = nextMd
+
+        setLeagueMatchResults((prev) => ({
+          ...prev,
+          [nextMd]: data.results,
+        }))
+        setLeagueStandings(data.standings)
+        setPlayerStats(data.player_stats)
+        if (data.awards) {
+          setLeagueAwards(data.awards)
+        }
+        setCurrentSimulatedMatchday(nextMd)
+        setViewingMatchday(nextMd)
+
+        // If another matchday remains and auto-sim is still active, wait before simulating next matchday
+        if (curMd < 38 && isAutoSimulatingRef.current) {
+          const delay = simSpeedRef.current === "2x" ? 350 : 800
+          await new Promise((resolve) => setTimeout(resolve, delay))
+        }
+      }
+    } catch (err: any) {
+      console.error(`Simulation loop error at matchday ${curMd + 1}:`, err)
+      setLeagueError(err.message || "Simulation request failed")
+    } finally {
+      isAutoSimulatingRef.current = false
+      setIsAutoSimulating(false)
+      setLeagueSimulating(false)
+    }
+  }
+
+  const handlePauseAutoSimulation = () => {
+    isAutoSimulatingRef.current = false
+    setIsAutoSimulating(false)
+    setLeagueSimulating(false)
+  }
+
+  const handleSimulateSingleMatchday = async () => {
+    if (currentSimulatedMatchday >= 38 || leagueSimulating || isAutoSimulating || !leagueSchedule.length) return
+    const nextMd = currentSimulatedMatchday + 1
+    const scheduleItem = leagueSchedule.find((s) => s.matchday === nextMd)
+    const fixturesList = scheduleItem?.matches || scheduleItem?.fixtures || []
+    if (!scheduleItem || !fixturesList.length) {
+      setLeagueError(`No fixture data found for matchday ${nextMd}`)
+      return
+    }
+
+    setLeagueSimulating(true)
+    setLeagueError(null)
+    try {
+      const apiUrl = import.meta.env.VITE_API_URL || "http://127.0.0.1:5000"
+      const res = await fetch(`${apiUrl}/api/league/simulate-matchday`, {
+        method: "POST",
+        headers: { "Content-Type": "application/json" },
+        body: JSON.stringify({
+          season: leagueSeason,
+          matchday: nextMd,
+          matches: fixturesList,
+          custom_club_name: leagueCustomClubName.trim() || "Custom XI",
+          replaced_club: leagueReplacedClub,
+          custom_xi: leagueStartingXI,
+          current_standings: leagueStandings,
+          player_stats: playerStats,
+        }),
+      })
+      const data = await res.json()
+      if (!res.ok || !data.success) {
+        throw new Error(data.error || `Failed to simulate matchday ${nextMd}`)
+      }
+
+      setLeagueMatchResults((prev) => ({
+        ...prev,
+        [nextMd]: data.results,
+      }))
+      setLeagueStandings(data.standings)
+      setPlayerStats(data.player_stats)
+      if (data.awards) {
+        setLeagueAwards(data.awards)
+      }
+      setCurrentSimulatedMatchday(nextMd)
+      setViewingMatchday(nextMd)
+    } catch (err: any) {
+      console.error(`Error simulating matchday ${nextMd}:`, err)
+      setLeagueError(err.message || "Simulation request failed")
+    } finally {
+      setLeagueSimulating(false)
+    }
+  }
+
+  const resetLeagueCampaign = () => {
+    isAutoSimulatingRef.current = false
+    setIsAutoSimulating(false)
+    setLeagueSimulating(false)
+    setLeagueSchedule([])
+    setLeagueStandings([])
+    setLeagueMatchResults({})
+    setCurrentSimulatedMatchday(0)
+    setViewingMatchday(1)
+    setPlayerStats({
+      goals: {},
+      clean_sheets: {},
+      mvp_points: {},
+      player_meta: {},
+    })
+    setLeagueAwards(null)
+    setLeagueInitialized(false)
+    setLeagueError(null)
+    setScreen("league-setup")
+  }
+
   if (screen === "preview") {
     return (
       <main className="relative min-h-screen overflow-hidden bg-[#061426] text-white">
@@ -798,8 +1181,9 @@ function App() {
             <button
               onClick={async () => {
                 try {
+                  const apiUrl = import.meta.env.VITE_API_URL || "http://127.0.0.1:5000"
                   const response = await fetch(
-                    `${import.meta.env.VITE_API_URL}/api/simulate`,
+                    `${apiUrl}/api/simulate`,
                     {
                       method: "POST",
                       headers: {
@@ -1503,390 +1887,6 @@ function App() {
   }
 
 
-  // Shared League Mode budget & Starting XI calculations
-  const startingBudget = STARTING_BUDGETS[leagueDifficulty]
-  const totalSpent =
-    Math.round(leagueStartingXI.reduce((sum, p) => sum + p.Price, 0) * 10) / 10
-  const remainingBudget =
-    Math.round((startingBudget - totalSpent) * 10) / 10
-
-  const formationReq = FORMATIONS[leagueFormation]
-  const currentGK = leagueStartingXI.filter((p) => p.position_group === "GK").length
-  const currentDEF = leagueStartingXI.filter((p) => p.position_group === "DEF").length
-  const currentMID = leagueStartingXI.filter((p) => p.position_group === "MID").length
-  const currentFWD = leagueStartingXI.filter((p) => p.position_group === "FWD").length
-
-  const isXIComplete =
-    leagueStartingXI.length === 11 &&
-    currentGK === formationReq.GK &&
-    currentDEF === formationReq.DEF &&
-    currentMID === formationReq.MID &&
-    currentFWD === formationReq.FWD &&
-    remainingBudget >= 0
-
-  const handleAddPlayer = (player: RatedPlayer) => {
-    if (leagueStartingXI.some((p) => p.id === player.id)) return
-    if (leagueStartingXI.length >= 11) return
-    if (player.position_group === "GK" && currentGK >= formationReq.GK) return
-    if (player.position_group === "DEF" && currentDEF >= formationReq.DEF) return
-    if (player.position_group === "MID" && currentMID >= formationReq.MID) return
-    if (player.position_group === "FWD" && currentFWD >= formationReq.FWD) return
-    if (totalSpent + player.Price > startingBudget + 0.001) return
-
-    setLeagueStartingXI((prev) => [...prev, player])
-  }
-
-  const handleRemovePlayer = (playerId: string) => {
-    setLeagueStartingXI((prev) => prev.filter((p) => p.id !== playerId))
-  }
-
-  const handleSelectFormation = (f: FormationKey) => {
-    if (f !== leagueFormation) {
-      setLeagueFormation(f)
-      setLeagueStartingXI([])
-    }
-  }
-
-  const reshuffleRandomOrder = (playersList: RatedPlayer[] = marketPlayers) => {
-    const map: Record<string, number> = {}
-    playersList.forEach((p) => {
-      map[p.id] = Math.random()
-    })
-    randomOrderMapRef.current = map
-    setRandomSeed((s) => s + 1)
-    setMarketPage(1)
-  }
-
-  // Rating profile
-  const xiFWDPlayers = leagueStartingXI.filter((p) => p.position_group === "FWD")
-  const xiMIDPlayers = leagueStartingXI.filter((p) => p.position_group === "MID")
-  const xiDEFPlayers = leagueStartingXI.filter((p) => p.position_group === "DEF")
-  const xiGKPlayers = leagueStartingXI.filter((p) => p.position_group === "GK")
-
-  const attackRating =
-    xiFWDPlayers.length > 0
-      ? Math.round(
-          xiFWDPlayers.reduce((sum, p) => sum + p.Rating, 0) /
-            xiFWDPlayers.length
-        )
-      : 0
-
-  const midfieldRating =
-    xiMIDPlayers.length > 0
-      ? Math.round(
-          xiMIDPlayers.reduce((sum, p) => sum + p.Rating, 0) /
-            xiMIDPlayers.length
-        )
-      : 0
-
-  const defenceRating =
-    xiDEFPlayers.length > 0
-      ? Math.round(
-          xiDEFPlayers.reduce((sum, p) => sum + p.Rating, 0) /
-            xiDEFPlayers.length
-        )
-      : 0
-
-  const gkRating = xiGKPlayers.length > 0 ? xiGKPlayers[0].Rating : 0
-
-  const overallRating =
-    leagueStartingXI.length > 0
-      ? Math.round(
-          leagueStartingXI.reduce((sum, p) => sum + p.Rating, 0) /
-            leagueStartingXI.length
-        )
-      : 0
-
-  const difficultyDisplay =
-    leagueDifficulty === "easy"
-      ? "Easy"
-      : leagueDifficulty === "hard"
-        ? "Hard"
-        : "Medium"
-
-  const seasonTeams = useMemo(() => {
-    if (!leagueSeason) return []
-    return Object.keys(teamSeasons)
-      .filter((team) => teamSeasons[team]?.includes(leagueSeason))
-      .sort()
-  }, [teamSeasons, leagueSeason])
-
-  const topScorersList = useMemo(() => {
-    return Object.entries(playerStats.goals)
-      .map(([key, count]) => {
-        const meta = playerStats.player_meta[key] || {
-          player: key.split("||")[0],
-          team: key.split("||")[1] || "",
-          position_group: "FWD",
-        }
-        return {
-          key,
-          player: meta.player,
-          team: meta.team,
-          position_group: meta.position_group,
-          goals: count,
-        }
-      })
-      .sort((a, b) => b.goals - a.goals || a.player.localeCompare(b.player))
-      .slice(0, 15)
-  }, [playerStats.goals, playerStats.player_meta])
-
-  const topCleanSheetsList = useMemo(() => {
-    return Object.entries(playerStats.clean_sheets)
-      .map(([key, count]) => {
-        const meta = playerStats.player_meta[key] || {
-          player: key.split("||")[0],
-          team: key.split("||")[1] || "",
-          position_group: "GK",
-        }
-        return {
-          key,
-          player: meta.player,
-          team: meta.team,
-          clean_sheets: count,
-        }
-      })
-      .sort((a, b) => b.clean_sheets - a.clean_sheets || a.player.localeCompare(b.player))
-      .slice(0, 15)
-  }, [playerStats.clean_sheets, playerStats.player_meta])
-
-  const topMvpList = useMemo(() => {
-    return Object.entries(playerStats.mvp_points)
-      .map(([key, points]) => {
-        const meta = playerStats.player_meta[key] || {
-          player: key.split("||")[0],
-          team: key.split("||")[1] || "",
-          position_group: "MID",
-        }
-        const goals = playerStats.goals[key] || 0
-        const cs = playerStats.clean_sheets[key] || 0
-        return {
-          key,
-          player: meta.player,
-          team: meta.team,
-          position_group: meta.position_group,
-          mvp_points: points,
-          goals,
-          clean_sheets: cs,
-        }
-      })
-      .sort((a, b) => b.mvp_points - a.mvp_points || a.player.localeCompare(b.player))
-      .slice(0, 15)
-  }, [playerStats.mvp_points, playerStats.player_meta, playerStats.goals, playerStats.clean_sheets])
-
-  const initLeagueSeason = async () => {
-    setLeagueInitLoading(true)
-    setLeagueError(null)
-    try {
-      const apiUrl = import.meta.env.VITE_API_URL || "http://127.0.0.1:5000"
-      const res = await fetch(`${apiUrl}/api/league/init`, {
-        method: "POST",
-        headers: { "Content-Type": "application/json" },
-        body: JSON.stringify({
-          season: leagueSeason,
-          replaced_club: leagueReplacedClub,
-          custom_club_name: leagueCustomClubName.trim() || "Custom XI",
-          custom_xi: leagueStartingXI,
-        }),
-      })
-      const data = await res.json()
-      if (!res.ok || !data.success) {
-        throw new Error(data.error || "Failed to initialize league fixtures")
-      }
-      setLeagueSchedule(data.schedule)
-      setLeagueStandings(data.initial_standings)
-      setLeagueMatchResults({})
-      setCurrentSimulatedMatchday(0)
-      setViewingMatchday(1)
-      setPlayerStats({
-        goals: {},
-        clean_sheets: {},
-        mvp_points: {},
-        player_meta: {},
-      })
-      setLeagueAwards(null)
-      setLeagueInitialized(true)
-    } catch (err: any) {
-      console.error("Error initializing league:", err)
-      setLeagueError(err.message || "Failed to initialize league simulation")
-    } finally {
-      setLeagueInitLoading(false)
-    }
-  }
-
-  useEffect(() => {
-    if (
-      screen === "league-dashboard" &&
-      leagueSeason &&
-      leagueReplacedClub &&
-      leagueStartingXI.length === 11 &&
-      !leagueInitialized &&
-      !leagueInitLoading
-    ) {
-      initLeagueSeason()
-    }
-  }, [
-    screen,
-    leagueSeason,
-    leagueReplacedClub,
-    leagueStartingXI.length,
-    leagueInitialized,
-    leagueInitLoading,
-  ])
-
-  const handleStartAutoSimulation = async () => {
-    if (currentSimulatedMatchday >= 38 || isAutoSimulatingRef.current || !leagueSchedule.length) return
-
-    isAutoSimulatingRef.current = true
-    setIsAutoSimulating(true)
-    setLeagueSimulating(true)
-    setLeagueError(null)
-
-    let curMd = currentSimulatedMatchday
-    let curStandings = leagueStandings
-    let curPlayerStats = playerStats
-
-    const apiUrl = import.meta.env.VITE_API_URL || "http://127.0.0.1:5000"
-
-    try {
-      while (curMd < 38 && isAutoSimulatingRef.current) {
-        const nextMd = curMd + 1
-        const scheduleItem = leagueSchedule.find((s) => s.matchday === nextMd)
-        const fixturesList = scheduleItem?.matches || scheduleItem?.fixtures || []
-        if (!scheduleItem || !fixturesList.length) {
-          throw new Error(`No fixture data found for matchday ${nextMd}`)
-        }
-
-        const res = await fetch(`${apiUrl}/api/league/simulate-matchday`, {
-          method: "POST",
-          headers: { "Content-Type": "application/json" },
-          body: JSON.stringify({
-            season: leagueSeason,
-            matchday: nextMd,
-            matches: fixturesList,
-            custom_club_name: leagueCustomClubName.trim() || "Custom XI",
-            replaced_club: leagueReplacedClub,
-            custom_xi: leagueStartingXI,
-            current_standings: curStandings,
-            player_stats: curPlayerStats,
-          }),
-        })
-
-        const data = await res.json()
-        if (!res.ok || !data.success) {
-          throw new Error(data.error || `Failed to simulate matchday ${nextMd}`)
-        }
-
-        curStandings = data.standings
-        curPlayerStats = data.player_stats
-        curMd = nextMd
-
-        setLeagueMatchResults((prev) => ({
-          ...prev,
-          [nextMd]: data.results,
-        }))
-        setLeagueStandings(data.standings)
-        setPlayerStats(data.player_stats)
-        if (data.awards) {
-          setLeagueAwards(data.awards)
-        }
-        setCurrentSimulatedMatchday(nextMd)
-        setViewingMatchday(nextMd)
-
-        // If another matchday remains and auto-sim is still active, wait before simulating next matchday
-        if (curMd < 38 && isAutoSimulatingRef.current) {
-          const delay = simSpeedRef.current === "2x" ? 350 : 800
-          await new Promise((resolve) => setTimeout(resolve, delay))
-        }
-      }
-    } catch (err: any) {
-      console.error(`Simulation loop error at matchday ${curMd + 1}:`, err)
-      setLeagueError(err.message || "Simulation request failed")
-    } finally {
-      isAutoSimulatingRef.current = false
-      setIsAutoSimulating(false)
-      setLeagueSimulating(false)
-    }
-  }
-
-  const handlePauseAutoSimulation = () => {
-    isAutoSimulatingRef.current = false
-    setIsAutoSimulating(false)
-    setLeagueSimulating(false)
-  }
-
-  const handleSimulateSingleMatchday = async () => {
-    if (currentSimulatedMatchday >= 38 || leagueSimulating || isAutoSimulating || !leagueSchedule.length) return
-    const nextMd = currentSimulatedMatchday + 1
-    const scheduleItem = leagueSchedule.find((s) => s.matchday === nextMd)
-    const fixturesList = scheduleItem?.matches || scheduleItem?.fixtures || []
-    if (!scheduleItem || !fixturesList.length) {
-      setLeagueError(`No fixture data found for matchday ${nextMd}`)
-      return
-    }
-
-    setLeagueSimulating(true)
-    setLeagueError(null)
-    try {
-      const apiUrl = import.meta.env.VITE_API_URL || "http://127.0.0.1:5000"
-      const res = await fetch(`${apiUrl}/api/league/simulate-matchday`, {
-        method: "POST",
-        headers: { "Content-Type": "application/json" },
-        body: JSON.stringify({
-          season: leagueSeason,
-          matchday: nextMd,
-          matches: fixturesList,
-          custom_club_name: leagueCustomClubName.trim() || "Custom XI",
-          replaced_club: leagueReplacedClub,
-          custom_xi: leagueStartingXI,
-          current_standings: leagueStandings,
-          player_stats: playerStats,
-        }),
-      })
-      const data = await res.json()
-      if (!res.ok || !data.success) {
-        throw new Error(data.error || `Failed to simulate matchday ${nextMd}`)
-      }
-
-      setLeagueMatchResults((prev) => ({
-        ...prev,
-        [nextMd]: data.results,
-      }))
-      setLeagueStandings(data.standings)
-      setPlayerStats(data.player_stats)
-      if (data.awards) {
-        setLeagueAwards(data.awards)
-      }
-      setCurrentSimulatedMatchday(nextMd)
-      setViewingMatchday(nextMd)
-    } catch (err: any) {
-      console.error(`Error simulating matchday ${nextMd}:`, err)
-      setLeagueError(err.message || "Simulation request failed")
-    } finally {
-      setLeagueSimulating(false)
-    }
-  }
-
-  const resetLeagueCampaign = () => {
-    isAutoSimulatingRef.current = false
-    setIsAutoSimulating(false)
-    setLeagueSimulating(false)
-    setLeagueSchedule([])
-    setLeagueStandings([])
-    setLeagueMatchResults({})
-    setCurrentSimulatedMatchday(0)
-    setViewingMatchday(1)
-    setPlayerStats({
-      goals: {},
-      clean_sheets: {},
-      mvp_points: {},
-      player_meta: {},
-    })
-    setLeagueAwards(null)
-    setLeagueInitialized(false)
-    setLeagueError(null)
-    setScreen("league-setup")
-  }
 
   // -------------------------------------------------------------------------
   // SCREEN: LEAGUE DASHBOARD
@@ -3185,7 +3185,7 @@ function App() {
           case "name_asc":
             return a.Player.localeCompare(b.Player)
           case "random":
-            return (randomOrderMapRef.current[a.id] ?? 0) - (randomOrderMapRef.current[b.id] ?? 0)
+            return (randomOrderMap[a.id] ?? 0) - (randomOrderMap[b.id] ?? 0)
           default:
             return 0
         }
