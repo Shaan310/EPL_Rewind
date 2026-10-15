@@ -1460,13 +1460,26 @@ function App() {
 
           </div>
 
-          <div className="mt-10 flex justify-center">
+          <div className="mt-10 flex flex-col items-center justify-center gap-4 sm:flex-row">
+
+            <button
+              onClick={() => {
+                setMatchResult(null)
+                setMatchSimError(null)
+                setIsSimulatingMatch(false)
+                setScreen("preview")
+              }}
+              className="group flex items-center gap-3 rounded-xl bg-[#38BDF8] px-10 py-4 text-sm font-black uppercase tracking-widest text-white shadow-lg shadow-[#38BDF8]/20 transition hover:scale-105 active:scale-95"
+            >
+              <RotateCcw size={16} className="transition-transform group-hover:-rotate-45" />
+              Simulate Again
+            </button>
 
             <button
               onClick={resetMatch}
-              className="rounded-xl bg-[#38BDF8] px-10 py-4 text-sm font-black uppercase tracking-widest text-[#FFFFFF] transition hover:scale-105"
+              className="rounded-xl border border-white/20 bg-white/5 px-10 py-4 text-sm font-black uppercase tracking-widest text-white/70 transition hover:scale-105 hover:border-white/40 hover:bg-white/10 hover:text-white active:scale-95"
             >
-              Play Again
+              Start Over
             </button>
 
           </div>
