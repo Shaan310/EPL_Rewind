@@ -18,6 +18,7 @@ import {
   Medal,
   Play,
   Pause,
+  Loader2,
 } from "lucide-react"
 
 const ATTACKERS = [
@@ -430,6 +431,8 @@ function App() {
   const [homePlayers, setHomePlayers] = useState<any[]>([])
   const [awayPlayers, setAwayPlayers] = useState<any[]>([])
   const [matchResult, setMatchResult] = useState<any>(null)
+  const [isSimulatingMatch, setIsSimulatingMatch] = useState(false)
+  const [matchSimError, setMatchSimError] = useState<string | null>(null)
   const [homeXI, setHomeXI] = useState<any[]>([])
   const [awayXI, setAwayXI] = useState<any[]>([])
   const [teamSeasons, setTeamSeasons] = useState<Record<string, string[]>>({})
@@ -451,6 +454,8 @@ function App() {
     setHomeXI([])
     setAwayXI([])
     setMatchResult(null)
+    setIsSimulatingMatch(false)
+    setMatchSimError(null)
     setOpenDropdownId(null)
     setScreen("setup")
   }
@@ -1110,8 +1115,14 @@ function App() {
         <nav className="flex h-20 items-center justify-between border-b border-[#141414]/10 bg-[#1E3A8A] px-8 lg:px-14">
 
           <button
-            onClick={() => setScreen("lineup")}
-            className="text-sm font-bold text-white/50 transition hover:text-white"
+            disabled={isSimulatingMatch}
+            onClick={() => {
+              if (!isSimulatingMatch) {
+                setMatchSimError(null)
+                setScreen("lineup")
+              }
+            }}
+            className="text-sm font-bold text-white/50 transition hover:text-white disabled:cursor-not-allowed disabled:opacity-30"
           >
             ← Edit Lineups
           </button>
@@ -1176,15 +1187,18 @@ function App() {
 
           </div>
 
-          <div className="mt-16 flex justify-center">
+          <div className="mt-16 flex flex-col items-center justify-center">
 
             <button
+              disabled={isSimulatingMatch}
               onClick={async () => {
+                if (isSimulatingMatch) return
+                setIsSimulatingMatch(true)
+                setMatchSimError(null)
                 try {
                   const apiUrl = import.meta.env.VITE_API_URL || "http://127.0.0.1:5000"
-                  const response = await fetch(
-                    `${apiUrl}/api/simulate`,
-                    {
+                  const [response] = await Promise.all([
+                    fetch(`${apiUrl}/api/simulate`, {
                       method: "POST",
                       headers: {
                         "Content-Type": "application/json",
@@ -1197,8 +1211,14 @@ function App() {
                         home_xi: homeXI,
                         away_xi: awayXI,
                       }),
-                    }
-                  )
+                    }),
+                    new Promise((resolve) => setTimeout(resolve, 650)),
+                  ])
+
+                  if (!response.ok) {
+                    const errData = await response.json().catch(() => ({}))
+                    throw new Error(errData.error || `Simulation failed (${response.status})`)
+                  }
 
                   const data = await response.json()
 
@@ -1206,14 +1226,41 @@ function App() {
 
                   setMatchResult(data)
                   setScreen("result")
-                } catch (error) {
+                } catch (error: any) {
                   console.error("Simulation failed:", error)
+                  setMatchSimError(error.message || "Simulation failed. Please try again.")
+                } finally {
+                  setIsSimulatingMatch(false)
                 }
               }}
-              className="rounded-xl bg-[#38BDF8] px-12 py-4 text-sm font-black uppercase tracking-widest text-white transition hover:scale-105"
+              className={`flex items-center justify-center gap-3 rounded-xl px-12 py-4 text-sm font-black uppercase tracking-widest text-white shadow-lg transition ${
+                isSimulatingMatch
+                  ? "cursor-not-allowed bg-[#38BDF8]/80 shadow-[#38BDF8]/20"
+                  : "bg-[#38BDF8] shadow-[#38BDF8]/25 hover:scale-105 active:scale-95"
+              }`}
             >
-              SIMULATE MATCH
+              {isSimulatingMatch ? (
+                <>
+                  <Loader2 className="h-5 w-5 animate-spin text-white" />
+                  <span>SIMULATING MATCH...</span>
+                </>
+              ) : (
+                <span>SIMULATE MATCH</span>
+              )}
             </button>
+
+            {isSimulatingMatch && (
+              <p className="mt-4 animate-pulse text-xs font-semibold tracking-wider text-[#38BDF8]">
+                Rewinding history · Simulating match &amp; xG...
+              </p>
+            )}
+
+            {matchSimError && (
+              <div className="mt-4 flex items-center gap-2 rounded-lg border border-red-500/20 bg-red-500/10 px-4 py-2 text-xs font-semibold text-red-400">
+                <AlertCircle className="h-4 w-4 shrink-0" />
+                <span>{matchSimError}</span>
+              </div>
+            )}
 
           </div>
 
